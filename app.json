@@ -1,0 +1,64 @@
+{
+  "expo": {
+    "name": "NeuroMoves",
+    "owner": "northernstep",
+    "slug": "neuromoves",
+    "scheme": "neuromoves",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/logo.png",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "image": "./assets/logo.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#020235"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSCameraUsageDescription": "$(PRODUCT_NAME) needs access to your Camera to verify hand signs.",
+        "NSPhotoLibraryUsageDescription": "$(PRODUCT_NAME) needs access to your photos so parents can attach journal entries.",
+        "ITSAppUsesNonExemptEncryption": false
+      },
+      "bundleIdentifier": "com.northernstepstudio.neuromoves"
+    },
+    "android": {
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.READ_MEDIA_IMAGES",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.RECORD_AUDIO"
+      ],
+      "package": "com.northernstepstudio.neuromoves"
+    },
+    "plugins": [
+      [
+        "expo-image-picker",
+        {
+          "cameraPermission": "Allow $(PRODUCT_NAME) to use your camera for guided activity tasks.",
+          "photosPermission": "Allow $(PRODUCT_NAME) to access your photos to attach Daily Journal entries."
+        }
+      ],
+      "expo-font",
+      "expo-asset",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/logo.png",
+          "resizeMode": "contain",
+          "backgroundColor": "#020235"
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "49cf1dfe-5982-49c5-8d20-685a7d25c3cf"
+      },
+      "companyName": "Northern Step Studio",
+      "developerName": "Northern Step Studio"
+    }
+  }
+}

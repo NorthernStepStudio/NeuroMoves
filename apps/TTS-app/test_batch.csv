@@ -1,4 +1,0 @@
-text,valence,arousal,voice_id,filename
-First batch line.,0.8,0.5,hero_vits,hero1.wav
-Second batch line.,-0.5,-0.2,whisper_vits,whisper1.wav
-Third batch line with energy.,0.2,0.9,young_vits,young1.wav

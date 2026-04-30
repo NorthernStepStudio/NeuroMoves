@@ -1,3 +1,0 @@
-ALTER TABLE apps ADD COLUMN video_url TEXT;
-ALTER TABLE apps ADD COLUMN features TEXT;
-ALTER TABLE apps ADD COLUMN platform TEXT DEFAULT 'mobile';

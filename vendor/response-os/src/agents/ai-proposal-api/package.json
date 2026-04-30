@@ -1,0 +1,29 @@
+{
+  "name": "@nss/ai-proposal-api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "test": "tsx src/smoke.ts"
+  },
+  "dependencies": {
+    "@nss/proposal-core": "file:../../packages/proposal-core",
+    "cors": "^2.8.5",
+    "dotenv": "^16.6.1",
+    "express": "^4.21.2",
+    "multer": "^1.4.5-lts.2",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/multer": "^1.4.12",
+    "@types/node": "^20.19.16",
+    "tsx": "^4.20.5",
+    "typescript": "^5.9.2"
+  }
+}

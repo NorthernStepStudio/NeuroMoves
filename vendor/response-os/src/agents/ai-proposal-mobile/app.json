@@ -1,0 +1,17 @@
+{
+  "expo": {
+    "name": "AI Proposal Mobile",
+    "slug": "ai-proposal-mobile",
+    "entryPoint": "./index.ts",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "assetBundlePatterns": ["**/*"],
+    "android": {
+      "package": "com.northernstep.aiproposal"
+    },
+    "ios": {
+      "bundleIdentifier": "com.northernstep.aiproposal"
+    }
+  }
+}

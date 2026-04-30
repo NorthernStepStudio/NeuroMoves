@@ -1,0 +1,45 @@
+{
+  "name": "@nss/response-os",
+  "version": "0.1.0",
+  "description": "NSS ResponseOS internal engine",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "react-native": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "react-native": "./dist/index.js",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "clean": "node -e \"const fs=require('node:fs');fs.rmSync('dist',{ recursive: true, force: true });\"",
+    "build": "tsc -p tsconfig.json",
+    "build:clean": "npm run clean && npm run build",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "npm run build:clean && node --test tests/*.test.mjs",
+    "kit:build": "node tools/create-offline-kit.mjs",
+    "nns:respondeos": "npm run build && node tools/nns-respondeos-server.mjs",
+    "prepublishOnly": "npm run test"
+  },
+  "keywords": [
+    "response-os",
+    "nss",
+    "agent"
+  ],
+  "author": "Northern Step Studio",
+  "license": "ISC",
+  "type": "module",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  }
+}

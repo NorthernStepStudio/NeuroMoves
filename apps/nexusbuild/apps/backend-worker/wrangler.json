@@ -1,9 +1,0 @@
-{
-  "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "nexusbuild-backend-worker",
-  "account_id": "759d707ed057996978f474035cb51b18",
-  "main": "src/index.ts",
-  "compatibility_date": "2025-06-17",
-  "compatibility_flags": ["nodejs_compat"],
-  "workers_dev": true
-}

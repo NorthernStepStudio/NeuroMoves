@@ -1,0 +1,637 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NNS RespondeOS</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: #f7f4ed;
+        --bg-gradient: radial-gradient(circle at 15% 15%, rgba(221, 246, 231, 0.8), transparent 46%),
+          radial-gradient(circle at 85% 10%, rgba(255, 212, 171, 0.55), transparent 40%),
+          linear-gradient(180deg, #faf7f0 0%, #f3efe7 100%);
+        --ink: #1b2830;
+        --muted: #5f6f7c;
+        --card: #ffffffcc;
+        --card-border: #d5dfd8;
+        --accent: #1f8a70;
+        --accent-soft: #d9f2eb;
+        --warn: #c26a2d;
+        --ok: #1f8a70;
+        --danger: #b24646;
+        --shadow: 0 12px 32px rgba(26, 40, 49, 0.08);
+        --radius: 18px;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: "Space Grotesk", sans-serif;
+        color: var(--ink);
+        background: var(--bg);
+        background-image: var(--bg-gradient);
+        min-height: 100vh;
+      }
+
+      .wrap {
+        max-width: 1180px;
+        margin: 0 auto;
+        padding: 28px 16px 48px;
+      }
+
+      .hero {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 20px;
+        animation: rise 0.5s ease-out both;
+      }
+
+      .hero h1 {
+        margin: 0;
+        font-size: clamp(1.45rem, 3.8vw, 2.1rem);
+        letter-spacing: -0.02em;
+      }
+
+      .hero p {
+        margin: 6px 0 0;
+        color: var(--muted);
+      }
+
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: var(--card);
+        border: 1px solid var(--card-border);
+        border-radius: 999px;
+        padding: 7px 13px;
+        font-size: 0.9rem;
+      }
+
+      .dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: #9aa8b3;
+      }
+
+      .dot.ok {
+        background: var(--ok);
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(12, minmax(0, 1fr));
+        gap: 14px;
+      }
+
+      .card {
+        background: var(--card);
+        border: 1px solid var(--card-border);
+        border-radius: var(--radius);
+        padding: 16px;
+        box-shadow: var(--shadow);
+        animation: rise 0.45s ease-out both;
+      }
+
+      .card h2 {
+        margin: 0 0 12px;
+        font-size: 1.05rem;
+      }
+
+      .span-4 {
+        grid-column: span 4;
+      }
+      .span-6 {
+        grid-column: span 6;
+      }
+      .span-8 {
+        grid-column: span 8;
+      }
+      .span-12 {
+        grid-column: span 12;
+      }
+
+      .metrics {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .metric {
+        border: 1px solid var(--card-border);
+        border-radius: 12px;
+        padding: 10px;
+        background: #fff;
+      }
+
+      .metric .label {
+        font-size: 0.78rem;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+
+      .metric .value {
+        margin-top: 5px;
+        font-size: 1.5rem;
+        font-weight: 700;
+      }
+
+      form {
+        display: grid;
+        gap: 10px;
+      }
+
+      .row {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      label {
+        display: grid;
+        gap: 6px;
+        font-size: 0.85rem;
+        color: var(--muted);
+      }
+
+      input,
+      select,
+      textarea,
+      button {
+        font: inherit;
+      }
+
+      input,
+      select,
+      textarea {
+        width: 100%;
+        border-radius: 11px;
+        border: 1px solid #c8d4cd;
+        background: #fff;
+        padding: 9px 11px;
+        color: var(--ink);
+      }
+
+      textarea {
+        min-height: 90px;
+        resize: vertical;
+      }
+
+      button {
+        border: none;
+        border-radius: 12px;
+        padding: 10px 14px;
+        background: var(--accent);
+        color: white;
+        font-weight: 700;
+        cursor: pointer;
+      }
+
+      button.secondary {
+        background: #dbe8e2;
+        color: #21363f;
+      }
+
+      .toolbar {
+        display: flex;
+        gap: 8px;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.9rem;
+      }
+
+      th,
+      td {
+        border-bottom: 1px solid #e4ebe6;
+        text-align: left;
+        padding: 8px 6px;
+      }
+
+      th {
+        color: var(--muted);
+        font-size: 0.76rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .mono {
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 0.8rem;
+      }
+
+      .log {
+        white-space: pre-wrap;
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 0.8rem;
+        background: #f8fbf9;
+        border: 1px solid #d4e3db;
+        border-radius: 12px;
+        padding: 10px;
+        min-height: 140px;
+        max-height: 300px;
+        overflow: auto;
+      }
+
+      .hidden {
+        display: none;
+      }
+
+      .help {
+        font-size: 0.79rem;
+        color: var(--muted);
+      }
+
+      @keyframes rise {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @media (max-width: 960px) {
+        .span-4,
+        .span-6,
+        .span-8 {
+          grid-column: span 12;
+        }
+
+        .metrics {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+
+      @media (max-width: 620px) {
+        .row {
+          grid-template-columns: 1fr;
+        }
+        .metrics {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <section class="hero">
+        <div>
+          <h1>NNS RespondeOS</h1>
+          <p>Operate missed call, SMS intake, booking, and review flows from one clean panel.</p>
+        </div>
+        <div class="badge">
+          <span id="healthDot" class="dot"></span>
+          <span id="healthText">Checking</span>
+        </div>
+      </section>
+
+      <section class="grid">
+        <article class="card span-4">
+          <h2>Business Profile</h2>
+          <form id="profileForm">
+            <label>
+              Tenant ID
+              <input id="tenantId" value="default" />
+            </label>
+            <label>
+              Business Name
+              <input id="businessName" value="NSS Local Services" />
+            </label>
+            <div class="row">
+              <label>
+                Callback Number
+                <input id="callbackNumber" value="+12025550999" />
+              </label>
+              <label>
+                Timezone
+                <input id="timezone" value="America/New_York" />
+              </label>
+            </div>
+            <label>
+              Services (comma separated)
+              <input id="services" value="hvac repair, plumbing, electrical, renovation" />
+            </label>
+            <div class="toolbar">
+              <button type="submit">Save Profile</button>
+              <button class="secondary" type="button" id="reloadBtn">Reload</button>
+            </div>
+          </form>
+        </article>
+
+        <article class="card span-8">
+          <h2>Automation Metrics</h2>
+          <div class="metrics">
+            <div class="metric"><div class="label">Events</div><div class="value" id="mEvents">0</div></div>
+            <div class="metric"><div class="label">Missed Calls Recovered</div><div class="value" id="mMissed">0</div></div>
+            <div class="metric"><div class="label">Auto Replies</div><div class="value" id="mAuto">0</div></div>
+            <div class="metric"><div class="label">Appointments</div><div class="value" id="mBooked">0</div></div>
+            <div class="metric"><div class="label">Reviews Triggered</div><div class="value" id="mReviews">0</div></div>
+            <div class="metric"><div class="label">Hot Leads</div><div class="value" id="mHot">0</div></div>
+          </div>
+          <p class="help">Action Success: <span id="mActionOk">0</span> | Failures: <span id="mActionFail">0</span></p>
+        </article>
+
+        <article class="card span-6">
+          <h2>Event Runner</h2>
+          <form id="eventForm">
+            <div class="row">
+              <label>
+                Event Type
+                <select id="eventType">
+                  <option value="call.missed">call.missed</option>
+                  <option value="sms.received">sms.received</option>
+                  <option value="job.completed">job.completed</option>
+                </select>
+              </label>
+              <label>
+                Source
+                <input id="source" value="nns-respondeos-ui" />
+              </label>
+            </div>
+
+            <div id="callFields">
+              <div class="row">
+                <label>From Number <input id="callFrom" value="+12025550101" /></label>
+                <label>To Number <input id="callTo" value="+12025550999" /></label>
+              </div>
+              <label>Call SID <input id="callSid" value="CA_STUDIO_001" /></label>
+            </div>
+
+            <div id="smsFields" class="hidden">
+              <div class="row">
+                <label>From Number <input id="smsFrom" value="+12025550102" /></label>
+                <label>To Number <input id="smsTo" value="+12025550999" /></label>
+              </div>
+              <label>Message
+                <textarea id="smsBody">Need help with AC not cooling at 123 Main St today.</textarea>
+              </label>
+            </div>
+
+            <div id="jobFields" class="hidden">
+              <div class="row">
+                <label>Lead ID <input id="jobLeadId" value="lead_demo_001" /></label>
+                <label>Lead Phone <input id="jobLeadPhone" value="+12025550103" /></label>
+              </div>
+              <div class="row">
+                <label>
+                  Lead Status
+                  <select id="jobLeadStatus">
+                    <option value="won">won</option>
+                    <option value="lost">lost</option>
+                  </select>
+                </label>
+                <label>Review URL (optional) <input id="jobReviewUrl" value="https://example.com/review" /></label>
+              </div>
+            </div>
+
+            <button type="submit">Run Event</button>
+          </form>
+        </article>
+
+        <article class="card span-6">
+          <h2>Last Run Output</h2>
+          <div id="output" class="log">No events processed yet.</div>
+        </article>
+
+        <article class="card span-6">
+          <h2>Activity Log</h2>
+          <div id="activityLog" class="log">NNS RespondeOS ready.</div>
+        </article>
+
+        <article class="card span-12">
+          <h2>Leads</h2>
+          <div style="overflow:auto">
+            <table>
+              <thead>
+                <tr>
+                  <th>Phone</th>
+                  <th>Stage</th>
+                  <th>Category</th>
+                  <th>Urgency</th>
+                  <th>Tags</th>
+                  <th>Updated</th>
+                </tr>
+              </thead>
+              <tbody id="leadsTable"></tbody>
+            </table>
+          </div>
+        </article>
+      </section>
+    </div>
+
+    <script>
+      const qs = (id) => document.getElementById(id);
+      const healthDot = qs("healthDot");
+      const healthText = qs("healthText");
+      const tenantIdInput = qs("tenantId");
+      const outputEl = qs("output");
+      const activityLogEl = qs("activityLog");
+      const leadsTable = qs("leadsTable");
+      const eventType = qs("eventType");
+
+      const metricIds = {
+        eventsProcessed: "mEvents",
+        missedCallsRecovered: "mMissed",
+        inboundAutoReplies: "mAuto",
+        appointmentsBooked: "mBooked",
+        reviewsTriggered: "mReviews",
+        hotLeads: "mHot",
+        actionSuccess: "mActionOk",
+        actionFailures: "mActionFail",
+      };
+
+      function setHealth(ok, text) {
+        healthDot.className = ok ? "dot ok" : "dot";
+        healthText.textContent = text;
+      }
+
+      async function api(path, options = {}) {
+        const res = await fetch(path, {
+          headers: {
+            "content-type": "application/json",
+            ...(options.headers || {}),
+          },
+          ...options,
+        });
+        const data = await res.json();
+        if (!res.ok || data.ok === false) {
+          throw new Error(data.error || `Request failed (${res.status})`);
+        }
+        return data;
+      }
+
+      async function refreshHealth() {
+        try {
+          const data = await api("/api/health");
+          setHealth(true, `Healthy (${new Date(data.now).toLocaleTimeString()})`);
+        } catch (error) {
+          setHealth(false, "Offline");
+          log(`Health check failed: ${error.message}`);
+        }
+      }
+
+      async function loadProfile() {
+        const tenantId = tenantIdInput.value.trim() || "default";
+        const data = await api(`/api/profile?tenantId=${encodeURIComponent(tenantId)}`);
+        const profile = data.profile || {};
+        qs("businessName").value = profile.businessName || "";
+        qs("callbackNumber").value = profile.callbackNumber || "";
+        qs("timezone").value = profile.timezone || "";
+        qs("services").value = Array.isArray(profile.services) ? profile.services.join(", ") : "";
+      }
+
+      async function saveProfile(event) {
+        event.preventDefault();
+        const tenantId = tenantIdInput.value.trim() || "default";
+        const profile = {
+          businessName: qs("businessName").value.trim(),
+          callbackNumber: qs("callbackNumber").value.trim(),
+          timezone: qs("timezone").value.trim(),
+          services: qs("services").value
+            .split(",")
+            .map((item) => item.trim())
+            .filter(Boolean),
+        };
+        await api("/api/profile", {
+          method: "PUT",
+          body: JSON.stringify({ tenantId, profile }),
+        });
+        log("Profile saved.");
+        await refreshAll();
+      }
+
+      function getEventPayload() {
+        const tenantId = tenantIdInput.value.trim() || "default";
+        const type = eventType.value;
+        if (type === "call.missed") {
+          return {
+            tenantId,
+            source: qs("source").value.trim(),
+            fromNumber: qs("callFrom").value.trim(),
+            toNumber: qs("callTo").value.trim(),
+            callSid: qs("callSid").value.trim(),
+          };
+        }
+        if (type === "sms.received") {
+          return {
+            tenantId,
+            source: qs("source").value.trim(),
+            fromNumber: qs("smsFrom").value.trim(),
+            toNumber: qs("smsTo").value.trim(),
+            body: qs("smsBody").value.trim(),
+          };
+        }
+        return {
+          tenantId,
+          source: qs("source").value.trim(),
+          leadId: qs("jobLeadId").value.trim(),
+          leadPhone: qs("jobLeadPhone").value.trim(),
+          leadStatus: qs("jobLeadStatus").value,
+          reviewUrl: qs("jobReviewUrl").value.trim(),
+        };
+      }
+
+      async function runEvent(event) {
+        event.preventDefault();
+        const type = eventType.value;
+        const payload = getEventPayload();
+        const data = await api(`/api/events/${encodeURIComponent(type)}`, {
+          method: "POST",
+          body: JSON.stringify(payload),
+        });
+        outputEl.textContent = JSON.stringify(data.result, null, 2);
+        log(`Processed ${type} -> ${data.result.patch.status}`);
+        await refreshMetrics();
+        await refreshLeads();
+      }
+
+      async function refreshMetrics() {
+        const tenantId = tenantIdInput.value.trim() || "default";
+        const data = await api(`/api/metrics?tenantId=${encodeURIComponent(tenantId)}`);
+        const metrics = data.metrics || {};
+        Object.entries(metricIds).forEach(([key, id]) => {
+          qs(id).textContent = String(metrics[key] ?? 0);
+        });
+      }
+
+      async function refreshLeads() {
+        const tenantId = tenantIdInput.value.trim() || "default";
+        const data = await api(`/api/leads?tenantId=${encodeURIComponent(tenantId)}`);
+        const leads = Array.isArray(data.leads) ? data.leads : [];
+        leadsTable.innerHTML = "";
+
+        for (const lead of leads) {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td class="mono">${safe(lead.phone)}</td>
+            <td>${safe(lead.stage)}</td>
+            <td>${safe(lead.serviceCategory || "-")}</td>
+            <td>${safe(String(lead.urgencyScore ?? "-"))}</td>
+            <td>${safe(Array.isArray(lead.tags) ? lead.tags.join(", ") : "-")}</td>
+            <td class="mono">${safe(lead.updatedAt || "-")}</td>
+          `;
+          leadsTable.appendChild(tr);
+        }
+      }
+
+      function toggleEventFields() {
+        const type = eventType.value;
+        qs("callFields").classList.toggle("hidden", type !== "call.missed");
+        qs("smsFields").classList.toggle("hidden", type !== "sms.received");
+        qs("jobFields").classList.toggle("hidden", type !== "job.completed");
+      }
+
+      function log(line) {
+        const now = new Date().toLocaleTimeString();
+        const existing = activityLogEl.textContent?.trim();
+        const message = `[${now}] ${line}`;
+        if (!existing || existing === "NNS RespondeOS ready.") {
+          activityLogEl.textContent = message;
+        } else {
+          activityLogEl.textContent = `${message}\n\n${existing}`;
+        }
+      }
+
+      function safe(value) {
+        return String(value)
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;");
+      }
+
+      async function refreshAll() {
+        await refreshHealth();
+        await loadProfile();
+        await refreshMetrics();
+        await refreshLeads();
+      }
+
+      qs("profileForm").addEventListener("submit", saveProfile);
+      qs("eventForm").addEventListener("submit", runEvent);
+      qs("reloadBtn").addEventListener("click", refreshAll);
+      eventType.addEventListener("change", toggleEventFields);
+      tenantIdInput.addEventListener("change", refreshAll);
+
+      toggleEventFields();
+      refreshAll();
+    </script>
+  </body>
+</html>

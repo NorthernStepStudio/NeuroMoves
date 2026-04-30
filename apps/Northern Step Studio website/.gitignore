@@ -1,8 +1,0 @@
-dist/
-node_modules/
-.wrangler/
-.dev.vars
-.env.local
-
-.vercel
-worker-dev.*.log

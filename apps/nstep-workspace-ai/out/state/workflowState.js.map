@@ -1,1 +1,0 @@
-{"version":3,"file":"workflowState.js","sourceRoot":"","sources":["../../src/state/workflowState.ts"],"names":[],"mappings":";;AAEA,sDAMC;AAND,SAAgB,qBAAqB,CAAC,cAA0C;IAC9E,IAAI,CAAC,cAAc,EAAE,CAAC;QACpB,OAAO,SAAS,CAAC;IACnB,CAAC;IAED,OAAO,cAAc,CAAC,KAAK,CAAC,cAAc,CAAC,gBAAgB,CAAC,IAAI,UAAU,CAAC;AAC7E,CAAC"}

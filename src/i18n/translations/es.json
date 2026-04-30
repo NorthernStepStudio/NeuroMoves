@@ -1,0 +1,341 @@
+{
+    "languageGate": {
+        "title": "Elige el idioma",
+        "subtitle": "Choose app language / Scegli la lingua",
+        "en": {
+            "label": "English",
+            "subtitle": "Continue in English"
+        },
+        "es": {
+            "label": "Español",
+            "subtitle": "Continuar en Español"
+        },
+        "it": {
+            "label": "Italiano",
+            "subtitle": "Continua in Italiano"
+        }
+    },
+    "numberRecognition": {
+        "title": "Reconocimiento de números",
+        "instruction": "Encuentra el número {{number}}",
+        "hint": "👆 ¡Toca el número correcto!",
+        "tryAgain": "¡Inténtalo de nuevo!"
+    },
+    "yesNo": {
+        "title": "Sí o No",
+        "instruction": "¿Es {{number}}?",
+        "yes": "Sí",
+        "no": "No",
+        "levelTarget": "Encuentra: {{number}}",
+        "greatJob": "¡Buen trabajo!",
+        "awesomeText": "¡Impresionante!",
+        "tryAgainText": "Inténtalo de nuevo",
+        "wrongNumberText": "No, ese no es {{number}}",
+        "wrongYesText": "Oops, eso fue incorrecto.",
+        "wrongNoText": "Oops, en realidad era {{number}}."
+    },
+    "magicFingers": {
+        "title": "Dedos Mágicos",
+        "descThumb": "Toca el pulgar",
+        "descFingers": "Toca los dedos",
+        "descPattern": "¡Sigue el patrón!",
+        "greatJob": "¡Buen trabajo!",
+        "tapFinger": "¡Toca el dedo {{finger}}!",
+        "step": "Paso",
+        "level": "Nivel",
+        "sequence": "Secuencia"
+    },
+    "numberTracing": {
+        "title": "Trazar Números",
+        "instruction": "Traza el número {{number}}",
+        "startGreen": "¡Empieza en el punto verde!",
+        "successMessage": "¡Gran trazado!",
+        "greatTracing": "¡Gran trazado!",
+        "tracingError": "¡Uy, mantente en el camino!",
+        "tryFollowing": "Intenta seguir la línea"
+    },
+    "popBubbles": {
+        "title": "EXPLOTA las Burbujas",
+        "instruction": "¡Explota las burbujas!",
+        "allPopped": "¡TODAS EXPLOTADAS! ¡HURRA!",
+        "allPoppedText": "¡Todas explotadas hurra!",
+        "left": "quedan"
+    },
+    "stacking": {
+        "title": "Apilar",
+        "instruction": "¡Apila los bloques!",
+        "subtitle": "¡Constrúyelo alto!",
+        "parentStart": "Anímelos a apilar los bloques con cuidado directamente uno encima del otro.",
+        "parentStruggle": "Puedes ayudar estabilizando su mano o señalando al centro.",
+        "parentSuccess": "¡Celebra sus manos firmes!",
+        "towerBuilt": "¡Torre construida!",
+        "resetConfirm": "¿Borrar los bloques actuales?",
+        "restartConfirm": "¿Volver al Nivel 1?",
+        "startHere": "EMPIEZA AQUÍ"
+    },
+    "tracing": {
+        "title": "Trazar Letras",
+        "instruction": "Traza la letra {{letter}}",
+        "case": "Caja",
+        "startGreen": "¡Empieza en el punto verde!",
+        "successMessage": "¡Gran trazado!",
+        "greatTracing": "¡Gran trazado!",
+        "tracingError": "¡Uy, mantente en el camino!",
+        "tryFollowing": "Intenta seguir la línea"
+    },
+    "home": {
+        "goodMorning": "Buenos días",
+        "goodAfternoon": "Buenas tardes",
+        "goodEvening": "Buenas noches",
+        "readyPractice": "¿Listos para la práctica de hoy",
+        "parentMode": "Modo Padres",
+        "done": "Hecho",
+        "childAge": "Edad",
+        "tried": "Probado",
+        "companionTools": "Herramientas",
+        "dailyJournal": "Diario",
+        "trackWins": "Registra logros diarios",
+        "badges": "Insignias",
+        "milestones": "Hitos alcanzados",
+        "avatarStudio": "Estudio de Avatar",
+        "customize": "Personaliza tu avatar",
+        "responseOs": "Plan ResponseOS",
+        "generatePlan": "Genera + guarda + exporta tu plan diario",
+        "generatingPlan": "Generando y guardando tu plan...",
+        "continue": "Continuar",
+        "play": "Jugar",
+        "pro": "Pro",
+        "suggestedFor": "Sugerido para",
+        "level": "Nivel",
+        "unlockPro": "Desbloquear Pro",
+        "skillProgress": "Progreso de Habilidades",
+        "recentActivity": "Actividad Reciente",
+        "levelReached": "Nivel {{level}} alcanzado",
+        "dailyPractice": "Práctica Diaria",
+        "start": "Comenzar",
+        "exploreAll": "Explorar Todas las Actividades"
+    },
+    "nav": {
+        "home": "Inicio",
+        "activities": "Juegos",
+        "progress": "Progreso",
+        "settings": "Ajustes"
+    },
+    "colorMatch": {
+        "title": "Combinar Colores",
+        "findText": "Encuentra el color",
+        "instruction": "Encuentra el color {{color}}",
+        "successMessage": "¡Lo lograste!",
+        "tryAgain": "¡Inténtalo de nuevo!",
+        "hintText": "Une los colores",
+        "level": "Nivel",
+        "colors": "Colores"
+    },
+    "pointItOut": {
+        "title": "Señálalo",
+        "instruction": "Encuentra el {{object}}",
+        "successMessage": "¡Lo encontraste!",
+        "tryAgain": "¡Inténtalo de nuevo!"
+    },
+    "shapeSorting": {
+        "title": "Ordenar Formas",
+        "instruction": "Arrastra las formas a sus agujeros",
+        "successMessage": "¡Buen trabajo!",
+        "tryAgain": "Sigue intentando"
+    },
+    "babySigns": {
+        "title": "Señas de Bebé",
+        "instruction": "Muéstrame la seña de {{sign}}"
+    },
+    "emotions": {
+        "title": "Emociones",
+        "instruction": "¿Quién se siente {{emotion}}?"
+    },
+    "bodyParts": {
+        "title": "Partes del Cuerpo",
+        "instruction": "Toca el {{part}}"
+    },
+    "animalSounds": {
+        "title": "Sonidos de Animales",
+        "instruction": "¿Qué animal hace {{sound}}?"
+    },
+    "sizeOrdering": {
+        "title": "Ordenar por Tamaño",
+        "instruction": "Ordena por tamaño"
+    },
+    "letterRecognition": {
+        "title": "Reconocer Letras",
+        "instruction": "Encuentra la letra {{letter}}",
+        "tryAgain": "¡Inténtalo de nuevo!",
+        "hint": "Toca la letra correcta"
+    },
+    "games": {
+        "color-match": {
+            "title": "Color",
+            "description": "Encuentra el color igual"
+        },
+        "yes-no": {
+            "title": "Sí o No",
+            "description": "Desliza para responder"
+        },
+        "pop-bubbles": {
+            "title": "Explotar Burbujas",
+            "description": "Explota todas"
+        },
+        "point-it-out": {
+            "title": "Señálalo",
+            "description": "Encuentra objetos ocultos"
+        },
+        "stacking": {
+            "title": "Apilar",
+            "description": "Apila los bloques muy alto"
+        },
+        "shape-sorting": {
+            "title": "Formas",
+            "description": "Arrastra las formas"
+        },
+        "baby-signs": {
+            "title": "Señas",
+            "description": "Aprende el lenguaje de señas"
+        },
+        "magic-fingers": {
+            "title": "Dedos Mágicos",
+            "description": "Ejercicios de dedos"
+        },
+        "emotions": {
+            "title": "Emociones",
+            "description": "Combina las caras"
+        },
+        "body-parts": {
+            "title": "Cuerpo",
+            "description": "Toca la parte del cuerpo"
+        },
+        "animal-sounds": {
+            "title": "Animales",
+            "description": "Combina los sonidos"
+        },
+        "size-ordering": {
+            "title": "Tamaños",
+            "description": "Ordena por tamaño"
+        },
+        "tracing": {
+            "title": "Trazar Letras",
+            "description": "Traza las letras"
+        },
+        "number-tracing": {
+            "title": "Trazar Números",
+            "description": "Aprende a escribir números"
+        },
+        "letter-recognition": {
+            "title": "Letras",
+            "description": "Encuentra la letra"
+        },
+        "number-recognition": {
+            "title": "Números",
+            "description": "Encuentra el número"
+        }
+    },
+    "game": {
+        "level": "Nivel",
+        "score": "Puntos"
+    },
+    "activities": {
+        "ready": "juegos listos.",
+        "proActive": "Pro activo.",
+        "freeActive": "Nivel gratis activo."
+    },
+    "settings": {
+        "title": "Ajustes",
+        "childProfile": "Perfil del Niño",
+        "childAge": "Edad",
+        "activeProfile": "Perfil Activo",
+        "noChild": "Ningún niño seleccionado",
+        "manageProfiles": "Administrar Perfiles",
+        "manageSub": "Añadir otro, cambiar perfil o editar",
+        "dailyJournal": "Diario",
+        "journalSub": "Registra notas y fotos de su progreso real",
+        "achievements": "Logros",
+        "achievementsSub": "Ver insignias y recompensas",
+        "avatarStudio": "Estudio Avatar",
+        "avatarSub": "Personaliza al compañero",
+        "upgradePro": "Mejora a Pro",
+        "proSub": "Desbloquea todo el contenido",
+        "appSettings": "Ajustes de la App",
+        "parentMode": "Modo Padres",
+        "parentSub": "Actividades guiadas por ti",
+        "audioSettings": "Audio",
+        "voiceVolume": "Volumen de Voz",
+        "voiceSub": "Instrucciones de los juegos",
+        "sfx": "Efectos de Sonido",
+        "sfxSub": "Sonidos de explotar, éxitos y errores",
+        "sensoryHaptics": "Sensorial y Háptica",
+        "haptic": "Vibración",
+        "hapticSub": "Vibra al interactuar",
+        "tactile": "Fuerza de la Vibración",
+        "intensity": "intensidad",
+        "about": "Acerca de",
+        "aboutApp": "Acerca de NeuroMoves",
+        "aboutSub": "Quiénes somos y nuestra misión",
+        "guide": "Guía de Actividades",
+        "guideSub": "Qué área desarrolla cada juego",
+        "contact": "Soporte",
+        "version": "Versión",
+        "legalPrivacy": "Legal y Privacidad",
+        "privacy": "Política de Privacidad",
+        "privacySub": "Cómo protegemos tus datos",
+        "terms": "Términos de Servicio",
+        "termsSub": "Acuerdo de uso",
+        "medical": "Aviso Médico",
+        "medicalSub": "Información importante",
+        "dataManagement": "Información",
+        "resetProgress": "Borrar Todo el Progreso",
+        "resetSub": "Borra la historia de juegos",
+        "exportData": "Exportar Información",
+        "exportSub": "Descarga toda la información como JSON",
+        "deleteAccount": "Borrar Cuenta",
+        "deleteSub": "Elimina permanentemente tu cuenta y data",
+        "logout": "Cerrar Sesión",
+        "logoutSub": "Cerrar sesión de esta cuenta",
+        "logoutPromptTitle": "Cerrar Sesión",
+        "logoutPromptMessage": "¿Quieres cerrar la sesión?",
+        "logoutConfirm": "Cerrar Sesión",
+        "cancel": "Cancelar",
+        "footer": "Hecho con ❤️ para padres e hijos"
+    },
+    "progress": {
+        "title": "Progreso",
+        "subtitle": "Rastrea el perfil de tu hijo en el tiempo.",
+        "exportPdf": "Exportar Reporte PDF",
+        "shareOt": "Comparte con el Terapeuta",
+        "dayStreak": "Racha",
+        "startToday": "Empieza hoy.",
+        "greatConsistency": "Gran consistencia.",
+        "excellentMomentum": "Excelente ritmo.",
+        "stickers": "Calcomanías Logradas",
+        "unlocked": "desbloqueadas",
+        "noStickers": "Aún no hay calcomanías. Sigue practicando.",
+        "successRate": "% Éxito",
+        "successes": "Éxitos",
+        "tried": "Intentos",
+        "speechAttempts": "Intentos Habla",
+        "otAttempts": "Intentos Motricidad",
+        "skillProgress": "Progreso de Habilidades",
+        "levels": "niveles",
+        "recentActivity": "Actividad Reciente",
+        "noActivity": "Sin actividad todavía",
+        "completeToPopulate": "Completa actividades para llenar esto."
+    },
+    "common": {
+        "clean": "Limpiar"
+    },
+    "language": "Idioma",
+    "categories": {
+        "motor": "Motricidad",
+        "cognitive": "Pensamiento",
+        "speech": "Habla",
+        "sensory": "Sensorial",
+        "motorDesc": "Desarrolla coordinación y movimiento",
+        "cognitiveDesc": "Desarrolla resolución de problemas",
+        "sensoryDesc": "Desarrolla la percepción sensorial"
+    }
+}

@@ -1,6 +1,0 @@
-src/**
-node_modules/**
-out/**/*.map
-tsconfig.json
-.gitignore
-docs/**

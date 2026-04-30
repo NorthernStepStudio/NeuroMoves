@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="RealLife Steps OT - Occupational Therapy App for Toddlers">
+    <title>RealLife Steps OT</title>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Three.js for 3D rendering -->
+    <!-- Three.js for 3D rendering (Using r147 for global script compatibility) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.147.0/three.min.js"></script>
+
+    <!-- Hammer.js for touch gestures -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/hammer.js/2.0.8/hammer.min.js"></script>
+
+    <!-- GLTFLoader for 3D models -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/loaders/GLTFLoader.js"></script>
+
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+
+<body>
+    <!-- Loading Screen -->
+    <div id="loading-screen" class="loading-screen">
+        <div class="loading-content">
+            <div class="loading-spinner"></div>
+            <h1 class="loading-title">RealLife Steps</h1>
+            <p class="loading-subtitle">Loading your adventure...</p>
+        </div>
+    </div>
+
+    <!-- Main App Container -->
+    <div id="app" class="app-container hidden">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="logo">
+                <span class="logo-icon">🌟</span>
+                <span class="logo-text">RealLife Steps</span>
+            </div>
+            <div class="header-controls">
+                <button id="btn-language" class="btn-icon" aria-label="Change Language">
+                    <span class="flag-icon">🌐</span>
+                </button>
+                <button id="btn-info" class="btn-icon" aria-label="About & Legal">
+                    ℹ️
+                </button>
+                <button id="btn-mic" class="btn-icon" aria-label="Talk to AI">
+                    🎙️
+                </button>
+                <button id="btn-settings" class="btn-icon" aria-label="Settings">
+                    ⚙️
+                </button>
+            </div>
+        </header>
+
+        <!-- Module Selection Screen -->
+        <main id="home-screen" class="screen">
+            <h2 class="screen-title" data-i18n="pick_game">Pick a Game!</h2>
+
+            <!-- Category: Fine Motor -->
+            <div class="category-section">
+                <h3 class="category-title" data-i18n="fine_motor">🖐️ Fine Motor Skills</h3>
+                <div class="module-grid">
+                    <button class="module-card" data-module="A" id="module-a">
+                        <div class="module-icon">✋</div>
+                        <h3 class="module-title" data-i18n="magic_fingers">Magic Fingers</h3>
+                        <p class="module-desc" data-i18n="magic_fingers_desc">Count with your fingers!</p>
+                        <div class="module-progress">
+                            <div id="progress-a" class="progress-bar"></div>
+                        </div>
+                    </button>
+                    <button class="module-card" data-module="shapes" id="module-shapes">
+                        <div class="module-icon">🔷</div>
+                        <h3 class="module-title" data-i18n="shape_sorting">Shape Sorting</h3>
+                        <p class="module-desc" data-i18n="shape_sorting_desc">Match the shapes!</p>
+                        <div class="module-progress">
+                            <div id="progress-shapes" class="progress-bar"></div>
+                        </div>
+                    </button>
+                    <button class="module-card" data-module="stacking" id="module-stacking">
+                        <div class="module-icon">🧱</div>
+                        <h3 class="module-title" data-i18n="stacking">Stacking</h3>
+                        <p class="module-desc" data-i18n="stacking_desc">Build a tower!</p>
+                        <div class="module-progress">
+                            <div id="progress-stacking" class="progress-bar"></div>
+                        </div>
+                    </button>
+                    <button class="module-card" data-module="tracing" id="module-tracing">
+                        <div class="module-icon">✏️</div>
+                        <h3 class="module-title" data-i18n="tracing">Tracing</h3>
+                        <p class="module-desc" data-i18n="tracing_desc">Follow the path!</p>
+                        <div class="module-progress">
+                            <div id="progress-tracing" class="progress-bar"></div>
+                        </div>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Category: Visual & Cognitive -->
+            <div class="category-section">
+                <h3 class="category-title" data-i18n="visual_thinking">👀 Visual & Thinking</h3>
+                <div class="module-grid">
+                    <button class="module-card" data-module="B" id="module-b">
+                        <div class="module-icon">🔍</div>
+                        <h3 class="module-title" data-i18n="point_it_out">Point It Out</h3>
+                        <p class="module-desc" data-i18n="point_it_out_desc">Find hidden things!</p>
+                        <div class="module-progress">
+                            <div id="progress-b" class="progress-bar"></div>
+                        </div>
+                    </button>
+                    <button class="module-card" data-module="colors" id="module-colors">
+                        <div class="module-icon">🎨</div>
+                        <h3 class="module-title" data-i18n="color_match">Color Match</h3>
+                        <p class="module-desc" data-i18n="color_match_desc">Find the colors!</p>
+                        <div class="module-progress">
+                            <div id="progress-colors" class="progress-bar"></div>
+                        </div>
+                    </button>
+                    <button class="module-card" data-module="bubbles" id="module-bubbles">
+                        <div class="module-icon">🫧</div>
+                        <h3 class="module-title" data-i18n="pop_bubbles">Pop Bubbles</h3>
+                        <p class="module-desc" data-i18n="pop_bubbles_desc">Pop them all!</p>
+                        <div class="module-progress">
+                            <div id="progress-bubbles" class="progress-bar"></div>
+                        </div>
+                    </button>
+                    <button class="module-card" data-module="sizes" id="module-sizes">
+                        <div class="module-icon">📏</div>
+                        <h3 class="module-title" data-i18n="size_matters">Size Matters</h3>
+                        <p class="module-desc" data-i18n="size_matters_desc">Sort big and small!</p>
+                        <div class="module-progress">
+                            <div id="progress-sizes" class="progress-bar"></div>
+                        </div>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Category: Communication -->
+            <div class="category-section">
+                <h3 class="category-title" data-i18n="communication">💬 Communication</h3>
+                <div class="module-grid">
+                    <button class="module-card" data-module="C" id="module-c">
+                        <div class="module-icon">👋</div>
+                        <h3 class="module-title" data-i18n="baby_signs">Baby Signs</h3>
+                        <p class="module-desc" data-i18n="baby_signs_desc">Learn sign language!</p>
+                        <div class="module-progress">
+                            <div id="progress-c" class="progress-bar"></div>
+                        </div>
+                    </button>
+                    <button class="module-card" data-module="D" id="module-d">
+                        <div class="module-icon">👍</div>
+                        <h3 class="module-title" data-i18n="yes_no">Yes or No</h3>
+                        <p class="module-desc" data-i18n="yes_no_desc">Swipe to answer!</p>
+                        <div class="module-progress">
+                            <div id="progress-d" class="progress-bar"></div>
+                        </div>
+                    </button>
+                    <button class="module-card" data-module="emotions" id="module-emotions">
+                        <div class="module-icon">😊</div>
+                        <h3 class="module-title" data-i18n="feelings">Feelings</h3>
+                        <p class="module-desc" data-i18n="feelings_desc">How do they feel?</p>
+                        <div class="module-progress">
+                            <div id="progress-emotions" class="progress-bar"></div>
+                        </div>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Category: Body Awareness -->
+            <div class="category-section">
+                <h3 class="category-title" data-i18n="body_awareness">🧍 Body Awareness</h3>
+                <div class="module-grid">
+                    <button class="module-card" data-module="bodyparts" id="module-bodyparts">
+                        <div class="module-icon">👃</div>
+                        <h3 class="module-title" data-i18n="body_parts">Body Parts</h3>
+                        <p class="module-desc" data-i18n="body_parts_desc">Where is your nose?</p>
+                        <div class="module-progress">
+                            <div id="progress-bodyparts" class="progress-bar"></div>
+                        </div>
+                    </button>
+                    <button class="module-card" data-module="animals" id="module-animals">
+                        <div class="module-icon">🐕</div>
+                        <h3 class="module-title" data-i18n="animal_sounds">Animal Sounds</h3>
+                        <p class="module-desc" data-i18n="animal_sounds_desc">What does it say?</p>
+                        <div class="module-progress">
+                            <div id="progress-animals" class="progress-bar"></div>
+                        </div>
+                    </button>
+                </div>
+            </div>
+        </main>
+
+
+        <!-- Game Screen (dynamically loaded per module) -->
+        <section id="game-screen" class="screen hidden">
+            <div class="game-header">
+                <button id="btn-back" class="btn-back" aria-label="Back to Menu">←</button>
+                <h2 id="game-title" class="game-title">Module</h2>
+                <div class="game-level">
+                    <span data-i18n="level">Level</span>
+                    <span id="current-level">1</span>
+                </div>
+            </div>
+
+            <!-- 3D Canvas Container -->
+            <div id="canvas-container" class="canvas-container"></div>
+
+            <!-- Video Container (for Module C) -->
+            <div id="video-container" class="video-container hidden">
+                <video id="game-video" muted></video>
+                <button id="tap-overlay" class="tap-overlay" aria-label="Tap to interact" type="button"></button>
+            </div>
+
+            <!-- Instruction Banner -->
+            <div id="instruction-banner" class="instruction-banner">
+                <p id="instruction-text">Tap the fingers in order!</p>
+            </div>
+
+            <!-- Feedback Popup -->
+            <div id="feedback-popup" class="feedback-popup hidden">
+                <div class="feedback-content">
+                    <span id="feedback-emoji" class="feedback-emoji">🌟</span>
+                    <p id="feedback-text" class="feedback-text">Great job!</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Language Modal -->
+        <div id="language-modal" class="modal hidden">
+            <div class="modal-content">
+                <h3 data-i18n="select_language">Select Language</h3>
+                <div class="language-options">
+                    <button class="language-btn" data-lang="en">
+                        <span class="flag">🇺🇸</span>
+                        <span>English</span>
+                    </button>
+                    <button class="language-btn" data-lang="es">
+                        <span class="flag">🇪🇸</span>
+                        <span>Español</span>
+                    </button>
+                    <button class="language-btn" data-lang="it">
+                        <span class="flag">🇮🇹</span>
+                        <span>Italiano</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Info Modal -->
+        <div id="info-modal" class="modal hidden">
+            <div class="modal-content">
+                <h3 data-i18n="about_title">About RealLife Steps</h3>
+
+                <div class="info-section">
+                    <h4 class="info-heading">🚀 <span data-i18n="mission_title">Our Mission</span></h4>
+                    <p class="info-text" data-i18n="mission_text">Empowering kids to learn.</p>
+                </div>
+
+                <div class="info-section">
+                    <h4 class="info-heading">👁️ <span data-i18n="vision_title">Our Vision</span></h4>
+                    <p class="info-text" data-i18n="vision_text">Accessible therapy tools for everyone.</p>
+                </div>
+
+                <div class="legal-text" data-i18n="disclaimer_text">
+                    Disclaimer: Not medical advice.
+                </div>
+
+                <button id="btn-close-info" class="btn-primary-large btn-modal-close">
+                    <span data-i18n="close">Close</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Settings Modal -->
+        <div id="settings-modal" class="modal hidden">
+            <div class="modal-content settings-modal-content">
+                <div class="settings-header">
+                    <h3 data-i18n="settings_title">⚙️ Settings</h3>
+                    <button id="btn-close-settings" class="btn-close-modal" aria-label="Close">&times;</button>
+                </div>
+                <div class="settings-body">
+                    <!-- Sound Toggle -->
+                    <div class="settings-row">
+                        <div class="settings-label">
+                            <span class="settings-icon">🔊</span>
+                            <span data-i18n="sound_effects">Sound Effects</span>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="toggle-sound" aria-label="Toggle Sound Effects" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    <!-- Vibration Toggle -->
+                    <div class="settings-row">
+                        <div class="settings-label">
+                            <span class="settings-icon">📳</span>
+                            <span data-i18n="vibration">Vibration</span>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="toggle-vibration" aria-label="Toggle Vibration" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    <!-- Voice Toggle -->
+                    <div class="settings-row">
+                        <div class="settings-label">
+                            <span class="settings-icon">🗣️</span>
+                            <span data-i18n="voice_feedback">Voice Feedback</span>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="toggle-voice" aria-label="Toggle Voice" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Level Complete Modal -->
+        <div id="level-complete-modal" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-icon-large">🏆</div>
+                <h3 id="level-complete-title" class="modal-title-large">Level Up!</h3>
+                <p id="level-complete-message" class="modal-message-large">Great job!</p>
+                <button id="btn-next-level" class="btn-primary-large">
+                    Next Level ➜
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Module Script -->
+    <script type="module" src="js/app.js"></script>
+</body>
+
+</html>

@@ -1,51 +1,7 @@
-# Node
 node_modules/
-dist/
-build/
-.next/
 .expo/
-.expo-shared/
+dist/
 
-# Python
-venv/
-.venv/
-__pycache__/
-*.pyc
-
-# App-specific virtualenvs
-apps/TTS-app/venv/
-apps/**/venv/
-apps/**/.venv/
-
-# Cloudflare / Vercel
-.wrangler/
-.vercel/
-.dev.vars
-.env
-.env.*
-.env.local
-worker-dev-*.log
-
-# Editor / OS
-.vscode/
-.DS_Store
-Thumbs.db
-
-# Local workspace
-.nstep-workspace-ai-server-port.json
-apps/*.worktrees/
-apps/nstep-publish/
-
-# Workspace hygiene
-test-results/
-.tmp-chrome-delete-account/
-archive/*
-!archive/*/
-!archive/*/MANIFEST.md
-*.log
-*.tmp
-*backup_*.html
-apps/**/scratch/
-apps/**/.expo-export-smoke/
-apps/**/.gradle/
-apps/**/tmp_*.json
+credentials.json
+credentials/
+*.jks

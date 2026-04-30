@@ -1,0 +1,341 @@
+{
+    "languageGate": {
+        "title": "Choose app language",
+        "subtitle": "Elige el idioma de la aplicación / Scegli la lingua",
+        "en": {
+            "label": "English",
+            "subtitle": "Continue in English"
+        },
+        "es": {
+            "label": "Español",
+            "subtitle": "Continuar en Español"
+        },
+        "it": {
+            "label": "Italiano",
+            "subtitle": "Continua in Italiano"
+        }
+    },
+    "numberRecognition": {
+        "title": "Number Recognition",
+        "instruction": "Find the number {{number}}",
+        "hint": "👆 Tap the matching number!",
+        "tryAgain": "Try again!"
+    },
+    "yesNo": {
+        "title": "Yes or No",
+        "instruction": "Is it {{number}}?",
+        "yes": "Yes",
+        "no": "No",
+        "levelTarget": "Find: {{number}}",
+        "greatJob": "Great Job!",
+        "awesomeText": "Awesome!",
+        "tryAgainText": "Try again",
+        "wrongNumberText": "No, that's not {{number}}",
+        "wrongYesText": "Oops, that was incorrect.",
+        "wrongNoText": "Oops, that actually was {{number}}."
+    },
+    "magicFingers": {
+        "title": "Magic Fingers",
+        "descThumb": "Tap the thumb",
+        "descFingers": "Tap the fingers",
+        "descPattern": "Follow the pattern!",
+        "greatJob": "Great job!",
+        "tapFinger": "Tap finger {{finger}}!",
+        "step": "Step",
+        "level": "Level",
+        "sequence": "Sequence"
+    },
+    "numberTracing": {
+        "title": "Number Tracing",
+        "instruction": "Trace the number {{number}}",
+        "startGreen": "Start at the green dot!",
+        "successMessage": "Great tracing!",
+        "greatTracing": "Great tracing!",
+        "tracingError": "Oops, stay on the path!",
+        "tryFollowing": "Try following the line"
+    },
+    "popBubbles": {
+        "title": "POP the Bubbles",
+        "instruction": "Pop the bubbles!",
+        "allPopped": "ALL POPPED! HURRAY",
+        "allPoppedText": "All popped hurray!",
+        "left": "left"
+    },
+    "stacking": {
+        "title": "Stacking",
+        "instruction": "Stack the blocks!",
+        "subtitle": "Build it high!",
+        "parentStart": "Encourage them to stack the blocks carefully directly on top of each other.",
+        "parentStruggle": "You can help by stabilizing their hand or pointing to the center.",
+        "parentSuccess": "Celebrate their steady hands!",
+        "towerBuilt": "Tower built!",
+        "resetConfirm": "Clear current blocks?",
+        "restartConfirm": "Go back to Level 1?",
+        "startHere": "START HERE"
+    },
+    "tracing": {
+        "title": "Letter Tracing",
+        "instruction": "Trace the letter {{letter}}",
+        "case": "Case",
+        "startGreen": "Start at the green dot!",
+        "successMessage": "Great tracing!",
+        "greatTracing": "Great tracing!",
+        "tracingError": "Oops, stay on the path!",
+        "tryFollowing": "Try following the line"
+    },
+    "home": {
+        "goodMorning": "Good morning",
+        "goodAfternoon": "Good afternoon",
+        "goodEvening": "Good evening",
+        "readyPractice": "Ready for today's practice",
+        "parentMode": "Parent Mode",
+        "done": "Done",
+        "childAge": "Child's age",
+        "tried": "Tried",
+        "companionTools": "Companion Tools",
+        "dailyJournal": "Daily Journal",
+        "trackWins": "Track real-life wins",
+        "badges": "Badges",
+        "milestones": "Milestone stickers",
+        "avatarStudio": "Avatar Studio",
+        "customize": "Customize companion",
+        "responseOs": "ResponseOS Plan Export",
+        "generatePlan": "Generate + save + export a daily plan",
+        "generatingPlan": "Generating and saving your plan...",
+        "continue": "Continue",
+        "play": "Play",
+        "pro": "Pro",
+        "suggestedFor": "Suggested for",
+        "level": "Level",
+        "unlockPro": "Unlock Pro",
+        "skillProgress": "Skill Progress",
+        "recentActivity": "Recent Activity",
+        "levelReached": "Level {{level}} reached",
+        "dailyPractice": "Daily Practice",
+        "start": "Start",
+        "exploreAll": "Explore All Activities"
+    },
+    "nav": {
+        "home": "Home",
+        "activities": "Activities",
+        "progress": "Progress",
+        "settings": "Settings"
+    },
+    "colorMatch": {
+        "title": "Color Match",
+        "findText": "Find the matching color",
+        "instruction": "Find the color {{color}}",
+        "successMessage": "You got it!",
+        "tryAgain": "Try again!",
+        "hintText": "Match the colors",
+        "level": "Level",
+        "colors": "Colors"
+    },
+    "pointItOut": {
+        "title": "Point It Out",
+        "instruction": "Find the {{object}}",
+        "successMessage": "You found it!",
+        "tryAgain": "Try again!"
+    },
+    "shapeSorting": {
+        "title": "Shape Sorting",
+        "instruction": "Drag the shapes to their holes",
+        "successMessage": "Great job!",
+        "tryAgain": "Keep trying"
+    },
+    "babySigns": {
+        "title": "Baby Signs",
+        "instruction": "Show me the sign for {{sign}}"
+    },
+    "emotions": {
+        "title": "Emotions",
+        "instruction": "Who is feeling {{emotion}}?"
+    },
+    "bodyParts": {
+        "title": "Body Parts",
+        "instruction": "Touch the {{part}}"
+    },
+    "animalSounds": {
+        "title": "Animal Sounds",
+        "instruction": "Which animal says {{sound}}?"
+    },
+    "sizeOrdering": {
+        "title": "Size Ordering",
+        "instruction": "Arrange by size"
+    },
+    "letterRecognition": {
+        "title": "Letter Recognition",
+        "instruction": "Find the letter {{letter}}",
+        "tryAgain": "Try again!",
+        "hint": "Tap the matching letter"
+    },
+    "games": {
+        "color-match": {
+            "title": "Color Match",
+            "description": "Find the matching color"
+        },
+        "yes-no": {
+            "title": "Yes or No",
+            "description": "Swipe to answer questions"
+        },
+        "pop-bubbles": {
+            "title": "Pop Bubbles",
+            "description": "Pop all the bubbles"
+        },
+        "point-it-out": {
+            "title": "Point It Out",
+            "description": "Find hidden objects"
+        },
+        "stacking": {
+            "title": "Stacking",
+            "description": "Stack blocks up high"
+        },
+        "shape-sorting": {
+            "title": "Shape Sorting",
+            "description": "Drag shapes to their holes"
+        },
+        "baby-signs": {
+            "title": "Baby Signs",
+            "description": "Learn sign language basics"
+        },
+        "magic-fingers": {
+            "title": "Magic Fingers",
+            "description": "Finger isolation exercises"
+        },
+        "emotions": {
+            "title": "Emotions",
+            "description": "Match the emotion faces"
+        },
+        "body-parts": {
+            "title": "Body Parts",
+            "description": "Touch the named body part"
+        },
+        "animal-sounds": {
+            "title": "Animal Sounds",
+            "description": "Match sounds to animals"
+        },
+        "size-ordering": {
+            "title": "Size Ordering",
+            "description": "Arrange by size"
+        },
+        "tracing": {
+            "title": "Letter Tracing",
+            "description": "Trace letters with your finger"
+        },
+        "number-tracing": {
+            "title": "Number Tracing",
+            "description": "Learn to write numbers"
+        },
+        "letter-recognition": {
+            "title": "Letter Recognition",
+            "description": "Find the matching letter"
+        },
+        "number-recognition": {
+            "title": "Number Recognition",
+            "description": "Find the matching number"
+        }
+    },
+    "game": {
+        "level": "Level",
+        "score": "Score"
+    },
+    "activities": {
+        "ready": "activities ready.",
+        "proActive": "Pro active.",
+        "freeActive": "Free tier active."
+    },
+    "settings": {
+        "title": "Settings",
+        "childProfile": "Child Profile",
+        "childAge": "Child Age",
+        "activeProfile": "Active Child Profile",
+        "noChild": "No child selected",
+        "manageProfiles": "Manage Child Profiles",
+        "manageSub": "Add another child, switch profile, edit details",
+        "dailyJournal": "Daily Journal",
+        "journalSub": "Track real-life progress notes and photos",
+        "achievements": "Achievements",
+        "achievementsSub": "View unlocked milestones and sticker badges",
+        "avatarStudio": "Avatar Studio",
+        "avatarSub": "Customize companion character rewards",
+        "upgradePro": "Upgrade to Pro",
+        "proSub": "Unlock all activities and advanced pathways",
+        "appSettings": "App Settings",
+        "parentMode": "Parent-guided Mode",
+        "parentSub": "Activities require parent participation",
+        "audioSettings": "Audio Settings",
+        "voiceVolume": "Voice Volume",
+        "voiceSub": "Game instructions",
+        "sfx": "Sound Effects",
+        "sfxSub": "Pop, success, error sounds",
+        "sensoryHaptics": "Sensory & Haptics",
+        "haptic": "Haptic Feedback",
+        "hapticSub": "Vibration patterns during gameplay",
+        "tactile": "Tactile Strength",
+        "intensity": "intensity",
+        "about": "About",
+        "aboutApp": "About NeuroMoves",
+        "aboutSub": "Who we are and our mission",
+        "guide": "Activity Guide",
+        "guideSub": "What each game helps develop",
+        "contact": "Contact Support",
+        "version": "App Version",
+        "legalPrivacy": "Legal & Privacy",
+        "privacy": "Privacy Policy",
+        "privacySub": "How we protect your data",
+        "terms": "Terms of Service",
+        "termsSub": "Usage agreement",
+        "medical": "Medical Disclaimer",
+        "medicalSub": "Important health information",
+        "dataManagement": "Data Management",
+        "resetProgress": "Reset All Progress",
+        "resetSub": "Clear all activity and game history",
+        "exportData": "Export My Data",
+        "exportSub": "Download all your data as JSON",
+        "deleteAccount": "Delete Account",
+        "deleteSub": "Permanently remove account and all data",
+        "logout": "Log Out",
+        "logoutSub": "Sign out of this parent account",
+        "logoutPromptTitle": "Log Out",
+        "logoutPromptMessage": "Do you want to sign out?",
+        "logoutConfirm": "Log Out",
+        "cancel": "Cancel",
+        "footer": "Made with ❤️ for parents and children"
+    },
+    "progress": {
+        "title": "Progress",
+        "subtitle": "Track your child profile over time.",
+        "exportPdf": "Export PDF Report",
+        "shareOt": "Share with OT/SLP",
+        "dayStreak": "Day Streak",
+        "startToday": "Start today.",
+        "greatConsistency": "Great consistency.",
+        "excellentMomentum": "Excellent momentum.",
+        "stickers": "Achievement Stickers",
+        "unlocked": "unlocked",
+        "noStickers": "No stickers yet. Keep practicing and journaling.",
+        "successRate": "Success Rate",
+        "successes": "Successes",
+        "tried": "Tried",
+        "speechAttempts": "Speech Attempts",
+        "otAttempts": "OT Attempts",
+        "skillProgress": "Skill Progress",
+        "levels": "levels",
+        "recentActivity": "Recent Activity",
+        "noActivity": "No activity yet",
+        "completeToPopulate": "Complete activities to populate this timeline."
+    },
+    "common": {
+        "clean": "Clean"
+    },
+    "language": "Language",
+    "categories": {
+        "motor": "Motor Skills",
+        "cognitive": "Thinking",
+        "speech": "Speech",
+        "sensory": "Sensory",
+        "motorDesc": "Build coordination and movement",
+        "cognitiveDesc": "Build matching and problem solving",
+        "sensoryDesc": "Build sensory awareness"
+    }
+}
