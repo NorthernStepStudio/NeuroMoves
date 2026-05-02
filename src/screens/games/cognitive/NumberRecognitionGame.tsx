@@ -65,7 +65,7 @@ function NumberRecognitionInner({ onResetLevel, onRestartGame }: { onResetLevel:
     const navigation = useNavigation();
     const {
         gameState, nextLevel, recordSuccess, showFeedback, feedback,
-        playSuccess, playError, speak
+        playSuccess, playError, speak, isBusy
     } = useGame();
     const { t } = useTranslation();
 
@@ -73,35 +73,57 @@ function NumberRecognitionInner({ onResetLevel, onRestartGame }: { onResetLevel:
     const targetNum = NUMBERS[(level - 1) % NUMBERS.length];
     const [answered, setAnswered] = useState(false);
 
-    // Generate 4 options including the target
-    const options = useMemo(() => {
+    // Unified round data to ensure color and options match the target
+    const roundData = useMemo(() => {
         const others = NUMBERS.filter(n => n !== targetNum);
         const distractors = shuffle(others).slice(0, 3);
-        return shuffle([targetNum, ...distractors]);
+        const shuffledOptions = shuffle([targetNum, ...distractors]);
+        
+        // Pick a consistent color for the target to match the prompt card
+        const targetColorIndex = Math.floor(Math.random() * OPTION_COLORS.length);
+        const targetColor = OPTION_COLORS[targetColorIndex];
+        
+        return {
+            options: shuffledOptions,
+            targetColor,
+            optionColors: shuffledOptions.map((num, idx) => 
+                num === targetNum ? targetColor : OPTION_COLORS[(targetColorIndex + idx + 1) % OPTION_COLORS.length]
+            )
+        };
     }, [targetNum]);
 
-    // Speak the target number on mount
+    // Speak the target number immediately on mount
     const hasSpoken = useRef(false);
     React.useEffect(() => {
         if (!hasSpoken.current) {
             hasSpoken.current = true;
-            const timer = setTimeout(() => speak(t('numberRecognition.instruction', { number: targetNum })), 400);
+            // Immediate prompt for numbers
+            const timer = setTimeout(() => speak(t('numberRecognition.instruction', { number: targetNum }), { shouldLock: true }), 100);
             return () => clearTimeout(timer);
         }
-    }, [targetNum, speak]);
+    }, [targetNum, speak, t]);
 
     const handleChoice = (chosen: string) => {
-        if (answered) return;
+        if (answered || isBusy) return;
 
         if (chosen === targetNum) {
             setAnswered(true);
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
             playSuccess();
             recordSuccess();
+
+            // Immediate feedback
             speak(targetNum);
-            setTimeout(() => speak(`yes, that's ${targetNum}`), 500);
-            showFeedback({ type: 'success', message: `${targetNum} ✓`, emoji: '⭐' });
-            setTimeout(nextLevel, 2500);
+            
+            // Give '10' more time since it's likely being fetched from the backend
+            const gap = targetNum === '10' ? 2000 : 1200;
+            setTimeout(() => {
+                speak(t('numberRecognition.successMessage', { number: targetNum }));
+                showFeedback({ type: 'success', message: `${targetNum} ✓`, emoji: '⭐' });
+            }, gap);
+            
+            // Delay before next level
+            setTimeout(nextLevel, gap + 1500);
         } else {
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
             playError();
@@ -122,24 +144,24 @@ function NumberRecognitionInner({ onResetLevel, onRestartGame }: { onResetLevel:
                 <GameInstruction text={t('numberRecognition.instruction', { number: targetNum })} />
 
                 {/* Prompt display */}
-                <View style={styles.promptCard}>
-                    <Text style={styles.promptText}>{targetNum}</Text>
+                <View style={[styles.promptCard, { borderColor: roundData.targetColor }]}>
+                    <Text style={[styles.promptText, { color: roundData.targetColor }]}>{targetNum}</Text>
                 </View>
 
                 {/* Options grid */}
                 <View style={styles.optionsGrid}>
-                    {options.map((num, index) => (
+                    {roundData.options.map((num, index) => (
                         <Pressable
                             key={`${num}-${index}`}
                             onPress={() => handleChoice(num)}
                             style={({ pressed }) => [
                                 styles.optionCard,
-                                { borderColor: OPTION_COLORS[index % OPTION_COLORS.length] },
+                                { borderColor: roundData.optionColors[index] },
                                 pressed && styles.optionPressed,
                             ]}
                             accessibilityLabel={`Choose number ${num}`}
                         >
-                            <Text style={[styles.optionText, { color: OPTION_COLORS[index % OPTION_COLORS.length] }]}>
+                            <Text style={[styles.optionText, { color: roundData.optionColors[index] }]}>
                                 {num}
                             </Text>
                         </Pressable>

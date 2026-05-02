@@ -78,7 +78,7 @@ function LetterRecognitionInner({ onResetLevel, onRestartGame, letterCase, setLe
     const navigation = useNavigation();
     const {
         gameState, nextLevel, recordSuccess, showFeedback, feedback,
-        playSuccess, playError, speak
+        playSuccess, playError, speak, isBusy
     } = useGame();
     const { t } = useTranslation();
 
@@ -87,35 +87,55 @@ function LetterRecognitionInner({ onResetLevel, onRestartGame, letterCase, setLe
     const targetLetter = allLetters[(level - 1) % allLetters.length];
     const [answered, setAnswered] = useState(false);
 
-    // Generate 4 options including the target
-    const options = useMemo(() => {
+    // Unified round data to ensure color and options match the target
+    const roundData = useMemo(() => {
         const others = allLetters.filter(l => l !== targetLetter);
         const distractors = shuffle(others).slice(0, 3);
-        return shuffle([targetLetter, ...distractors]);
+        const shuffledOptions = shuffle([targetLetter, ...distractors]);
+        
+        // Pick a consistent color for the target to match the prompt card
+        const targetColorIndex = Math.floor(Math.random() * OPTION_COLORS.length);
+        const targetColor = OPTION_COLORS[targetColorIndex];
+        
+        return {
+            options: shuffledOptions,
+            targetColor,
+            // Map colors to options so we can ensure consistency
+            optionColors: shuffledOptions.map((letter, idx) => 
+                letter === targetLetter ? targetColor : OPTION_COLORS[(targetColorIndex + idx + 1) % OPTION_COLORS.length]
+            )
+        };
     }, [targetLetter, allLetters]);
 
-    // Speak the target letter on mount
+    // Speak the target letter immediately on mount
     const hasSpoken = useRef(false);
     React.useEffect(() => {
         if (!hasSpoken.current) {
             hasSpoken.current = true;
-            const timer = setTimeout(() => speak(t('letterRecognition.instruction', { letter: targetLetter.toLowerCase() })), 400);
+            // Speak immediately or with very minimal delay for UI layout
+            const timer = setTimeout(() => speak(t('letterRecognition.instruction', { letter: targetLetter.toLowerCase() }), { shouldLock: true }), 100);
             return () => clearTimeout(timer);
         }
     }, [targetLetter, speak, t]);
 
     const handleChoice = (chosen: string) => {
-        if (answered) return;
+        if (answered || isBusy) return;
 
         if (chosen === targetLetter) {
             setAnswered(true);
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
             playSuccess();
             recordSuccess();
+            
+            // Immediate success feedback using raw letter sound
             speak(targetLetter.toLowerCase());
-            setTimeout(() => speak(t('letterRecognition.successMessage', { letter: targetLetter.toLowerCase() })), 500);
-            showFeedback({ type: 'success', message: `${targetLetter} ✓`, emoji: '🌟' });
-            setTimeout(nextLevel, 2500);
+            setTimeout(() => {
+                speak(t('letterRecognition.successMessage', { letter: targetLetter.toLowerCase() }));
+                showFeedback({ type: 'success', message: `${targetLetter} ✓`, emoji: '🌟' });
+            }, 1200);
+            
+            // Wait for audio/feedback before advancing
+            setTimeout(nextLevel, 3000);
         } else {
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
             playError();
@@ -150,24 +170,24 @@ function LetterRecognitionInner({ onResetLevel, onRestartGame, letterCase, setLe
                 <GameInstruction text={t('letterRecognition.instruction', { letter: targetLetter })} />
 
                 {/* Prompt display */}
-                <View style={styles.promptCard}>
-                    <Text style={styles.promptText}>{targetLetter}</Text>
+                <View style={[styles.promptCard, { borderColor: roundData.targetColor }]}>
+                    <Text style={[styles.promptText, { color: roundData.targetColor }]}>{targetLetter}</Text>
                 </View>
 
                 {/* Options grid */}
                 <View style={styles.optionsGrid}>
-                    {options.map((letter, index) => (
+                    {roundData.options.map((letter, index) => (
                         <Pressable
                             key={`${letter}-${index}`}
                             onPress={() => handleChoice(letter)}
                             style={({ pressed }) => [
                                 styles.optionCard,
-                                { borderColor: OPTION_COLORS[index % OPTION_COLORS.length] },
+                                { borderColor: roundData.optionColors[index] },
                                 pressed && styles.optionPressed,
                             ]}
                             accessibilityLabel={`Choose letter ${letter}`}
                         >
-                            <Text style={[styles.optionText, { color: OPTION_COLORS[index % OPTION_COLORS.length] }]}>
+                            <Text style={[styles.optionText, { color: roundData.optionColors[index] }]}>
                                 {letter}
                             </Text>
                         </Pressable>

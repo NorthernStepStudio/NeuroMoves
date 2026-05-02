@@ -1,4 +1,4 @@
-﻿import React, { useState, useCallback, useRef, useMemo } from 'react';
+import React, { useState, useCallback, useRef, useMemo } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import {
     View,
@@ -23,7 +23,8 @@ import {
 } from '../../../components/GameComponents';
 import { useGame } from '../../../core/GameContext';
 import { colors, spacing, borderRadius, fontSize } from '../../../theme/colors';
-import { TracePoint, validateTraceStroke } from './tracingValidation';
+import * as Speech from 'expo-speech';
+import { TracePoint, generateCheckpoints, updateCheckpoints, checkTracingProgress } from './tracingValidation';
 import { useTranslation } from 'react-i18next';
 
 const { width } = Dimensions.get('window');
@@ -69,15 +70,42 @@ function makeGuides(letters: string[]): LetterGuide[] {
         'X': (s) => `M${s * 0.2},${s * 0.15} L${s * 0.8},${s * 0.85} M${s * 0.8},${s * 0.15} L${s * 0.2},${s * 0.85}`,
         'Y': (s) => `M${s * 0.15},${s * 0.15} L${s * 0.5},${s * 0.5} L${s * 0.85},${s * 0.15} M${s * 0.5},${s * 0.5} L${s * 0.5},${s * 0.85}`,
         'Z': (s) => `M${s * 0.2},${s * 0.15} L${s * 0.8},${s * 0.15} L${s * 0.2},${s * 0.85} L${s * 0.8},${s * 0.85}`,
+        // Lowercase - High-quality polished redesign
+        'a': (s) => `M${s * 0.7},${s * 0.65} Q${s * 0.7},${s * 0.45} ${s * 0.47},${s * 0.45} Q${s * 0.25},${s * 0.45} ${s * 0.25},${s * 0.65} Q${s * 0.25},${s * 0.85} ${s * 0.47},${s * 0.85} Q${s * 0.7},${s * 0.85} ${s * 0.7},${s * 0.65} L${s * 0.7},${s * 0.85}`,
+        'b': (s) => `M${s * 0.3},${s * 0.15} L${s * 0.3},${s * 0.85} M${s * 0.3},${s * 0.65} Q${s * 0.3},${s * 0.45} ${s * 0.52},${s * 0.45} Q${s * 0.75},${s * 0.45} ${s * 0.75},${s * 0.65} Q${s * 0.75},${s * 0.85} ${s * 0.52},${s * 0.85} Q${s * 0.3},${s * 0.85} ${s * 0.3},${s * 0.65}`,
+        'c': (s) => `M${s * 0.7},${s * 0.55} Q${s * 0.7},${s * 0.45} ${s * 0.47},${s * 0.45} Q${s * 0.25},${s * 0.45} ${s * 0.25},${s * 0.65} Q${s * 0.25},${s * 0.85} ${s * 0.47},${s * 0.85} Q${s * 0.7},${s * 0.85} ${s * 0.7},${s * 0.75}`,
+        'd': (s) => `M${s * 0.7},${s * 0.65} Q${s * 0.7},${s * 0.45} ${s * 0.47},${s * 0.45} Q${s * 0.25},${s * 0.45} ${s * 0.25},${s * 0.65} Q${s * 0.25},${s * 0.85} ${s * 0.47},${s * 0.85} Q${s * 0.7},${s * 0.85} ${s * 0.7},${s * 0.65} M${s * 0.7},${s * 0.15} L${s * 0.7},${s * 0.85}`,
+        'e': (s) => `M${s * 0.25},${s * 0.65} L${s * 0.75},${s * 0.65} Q${s * 0.75},${s * 0.45} ${s * 0.5},${s * 0.45} Q${s * 0.25},${s * 0.45} ${s * 0.25},${s * 0.65} Q${s * 0.25},${s * 0.85} ${s * 0.5},${s * 0.85} Q${s * 0.75},${s * 0.85} ${s * 0.75},${s * 0.75}`,
+        'f': (s) => `M${s * 0.65},${s * 0.15} Q${s * 0.4},${s * 0.15} ${s * 0.4},${s * 0.4} L${s * 0.4},${s * 0.85} M${s * 0.25},${s * 0.45} L${s * 0.55},${s * 0.45}`,
+        'g': (s) => `M${s * 0.7},${s * 0.65} Q${s * 0.7},${s * 0.45} ${s * 0.47},${s * 0.45} Q${s * 0.25},${s * 0.45} ${s * 0.25},${s * 0.65} Q${s * 0.25},${s * 0.85} ${s * 0.47},${s * 0.85} Q${s * 0.7},${s * 0.85} ${s * 0.7},${s * 0.65} L${s * 0.7},${s * 1.0} Q${s * 0.7},${s * 1.1} ${s * 0.4},${s * 1.1}`,
+        'h': (s) => `M${s * 0.3},${s * 0.15} L${s * 0.3},${s * 0.85} M${s * 0.3},${s * 0.55} Q${s * 0.7},${s * 0.55} ${s * 0.7},${s * 0.85}`,
+        'i': (s) => `M${s * 0.5},${s * 0.4} L${s * 0.5},${s * 0.85} M${s * 0.5},${s * 0.2} L${s * 0.51},${s * 0.2}`,
+        'j': (s) => `M${s * 0.6},${s * 0.4} L${s * 0.6},${s * 0.85} Q${s * 0.6},${s * 1.0} ${s * 0.3},${s * 1.0} M${s * 0.6},${s * 0.2} L${s * 0.61},${s * 0.2}`,
+        'k': (s) => `M${s * 0.3},${s * 0.15} L${s * 0.3},${s * 0.85} M${s * 0.65},${s * 0.45} L${s * 0.3},${s * 0.65} L${s * 0.65},${s * 0.85}`,
+        'l': (s) => `M${s * 0.5},${s * 0.15} L${s * 0.5},${s * 0.85}`,
+        'm': (s) => `M${s * 0.15},${s * 0.45} L${s * 0.15},${s * 0.85} M${s * 0.15},${s * 0.55} Q${s * 0.4},${s * 0.55} ${s * 0.4},${s * 0.85} M${s * 0.4},${s * 0.55} Q${s * 0.75},${s * 0.55} ${s * 0.75},${s * 0.85}`,
+        'n': (s) => `M${s * 0.3},${s * 0.45} L${s * 0.3},${s * 0.85} M${s * 0.3},${s * 0.55} Q${s * 0.7},${s * 0.55} ${s * 0.7},${s * 0.85}`,
+        'o': (s) => `M${s * 0.5},${s * 0.45} Q${s * 0.75},${s * 0.45} ${s * 0.75},${s * 0.65} Q${s * 0.75},${s * 0.85} ${s * 0.5},${s * 0.85} Q${s * 0.25},${s * 0.85} ${s * 0.25},${s * 0.65} Q${s * 0.25},${s * 0.45} ${s * 0.5},${s * 0.45}`,
+        'p': (s) => `M${s * 0.3},${s * 0.45} L${s * 0.3},${s * 1.1} M${s * 0.3},${s * 0.65} Q${s * 0.3},${s * 0.45} ${s * 0.52},${s * 0.45} Q${s * 0.75},${s * 0.45} ${s * 0.75},${s * 0.65} Q${s * 0.75},${s * 0.85} ${s * 0.52},${s * 0.85} Q${s * 0.3},${s * 0.85} ${s * 0.3},${s * 0.65}`,
+        'q': (s) => `M${s * 0.7},${s * 0.45} L${s * 0.7},${s * 1.1} M${s * 0.7},${s * 0.65} Q${s * 0.7},${s * 0.45} ${s * 0.47},${s * 0.45} Q${s * 0.25},${s * 0.45} ${s * 0.25},${s * 0.65} Q${s * 0.25},${s * 0.85} ${s * 0.47},${s * 0.85} Q${s * 0.7},${s * 0.85} ${s * 0.7},${s * 0.65}`,
+        'r': (s) => `M${s * 0.35},${s * 0.45} L${s * 0.35},${s * 0.85} M${s * 0.35},${s * 0.65} Q${s * 0.35},${s * 0.5} ${s * 0.65},${s * 0.5}`,
+        's': (s) => `M${s * 0.7},${s * 0.55} Q${s * 0.7},${s * 0.45} ${s * 0.5},${s * 0.45} Q${s * 0.3},${s * 0.45} ${s * 0.3},${s * 0.55} Q${s * 0.3},${s * 0.65} ${s * 0.5},${s * 0.65} Q${s * 0.7},${s * 0.65} ${s * 0.7},${s * 0.75} Q${s * 0.7},${s * 0.85} ${s * 0.5},${s * 0.85} Q${s * 0.3},${s * 0.85} ${s * 0.3},${s * 0.75}`,
+        't': (s) => `M${s * 0.45},${s * 0.2} L${s * 0.45},${s * 0.75} Q${s * 0.45},${s * 0.85} ${s * 0.65},${s * 0.85} M${s * 0.3},${s * 0.45} L${s * 0.6},${s * 0.45}`,
+        'u': (s) => `M${s * 0.3},${s * 0.45} L${s * 0.3},${s * 0.75} Q${s * 0.3},${s * 0.85} ${s * 0.5},${s * 0.85} Q${s * 0.7},${s * 0.85} ${s * 0.7},${s * 0.75} L${s * 0.7},${s * 0.45} L${s * 0.7},${s * 0.85}`,
+        'v': (s) => `M${s * 0.25},${s * 0.45} L${s * 0.5},${s * 0.85} L${s * 0.75},${s * 0.45}`,
+        'w': (s) => `M${s * 0.15},${s * 0.45} L${s * 0.35},${s * 0.85} L${s * 0.5},${s * 0.65} L${s * 0.65},${s * 0.85} L${s * 0.85},${s * 0.45}`,
+        'x': (s) => `M${s * 0.3},${s * 0.45} L${s * 0.7},${s * 0.85} M${s * 0.7},${s * 0.45} L${s * 0.3},${s * 0.85}`,
+        'y': (s) => `M${s * 0.3},${s * 0.45} L${s * 0.3},${s * 0.7} Q${s * 0.3},${s * 0.85} ${s * 0.5},${s * 0.85} Q${s * 0.7},${s * 0.85} ${s * 0.7},${s * 0.7} L${s * 0.7},${s * 0.45} L${s * 0.7},${s * 1.1} Q${s * 0.7},${s * 1.2} ${s * 0.4},${s * 1.2}`,
+        'z': (s) => `M${s * 0.3},${s * 0.45} L${s * 0.7},${s * 0.45} L${s * 0.3},${s * 0.85} L${s * 0.7},${s * 0.85}`,
     };
     return letters.map(c => ({
         char: c,
-        guidePath: guides[c.toUpperCase()] || guides['A'],
+        guidePath: guides[c] || guides[c.toUpperCase()] || guides['A'],
     }));
 }
 
 const UPPER_GUIDES = makeGuides('ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split(''));
-const LOWER_GUIDES = makeGuides('ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split(''));
+const LOWER_GUIDES = makeGuides('abcdefghijklmnopqrstuvwxyz'.split(''));
 // For lowercase, we reuse the same shapes but display the lowercase char
 
 export default function TracingGame() {
@@ -118,19 +146,14 @@ function TracingGameInner({ onResetLevel, onRestartGame, letterCase, setLetterCa
     const navigation = useNavigation();
     const {
         gameState, nextLevel, recordSuccess, showFeedback, feedback,
-        playSuccess, playError, speak
+        playSuccess, playError, speak, isBusy
     } = useGame();
     const { t } = useTranslation();
 
     const [paths, setPaths] = useState<string[]>([]);
     const [currentPath, setCurrentPath] = useState('');
     const [done, setDone] = useState(false);
-
-    const currentPointsRef = useRef<{ x: number; y: number }[]>([]);
-    const allPointsRef = useRef<TracePoint[]>([]);
-    const currentPathRef = useRef('');
-    const timerRef = useRef<NodeJS.Timeout | null>(null);
-    const lastHintAtRef = useRef(0);
+    const doneRef = useRef(false);
 
     const level = Math.max(gameState.level, 1);
     const guides = letterCase === 'upper' ? UPPER_GUIDES : LOWER_GUIDES;
@@ -138,111 +161,96 @@ function TracingGameInner({ onResetLevel, onRestartGame, letterCase, setLetterCa
     const displayChar = letterCase === 'lower' ? guide.char.toLowerCase() : guide.char;
     const guideDString = guide.guidePath(CANVAS_SIZE);
 
-    // Start dot position (first M command)
+    // Checkpoints for real-time progress
+    const [checkpoints, setCheckpoints] = useState<{ point: TracePoint; visited: boolean }[]>([]);
+    const checkpointsRef = useRef<{ point: TracePoint; visited: boolean }[]>([]);
+
+    // Initialize checkpoints when guide path changes
+    React.useEffect(() => {
+        const points = generateCheckpoints(guideDString, 5);
+        const cps = points.map(p => ({ point: p, visited: false }));
+        setCheckpoints(cps);
+        checkpointsRef.current = cps;
+    }, [guideDString]);
+
     const startDot = useMemo(() => {
         const m = guideDString.match(/^M([\d.]+),([\d.]+)/);
         if (m) return { x: parseFloat(m[1]), y: parseFloat(m[2]) };
         return { x: CANVAS_SIZE * 0.5, y: CANVAS_SIZE * 0.15 };
     }, [guideDString]);
 
-    // Speak instruction on mount
     const hasSpoken = useRef(false);
     React.useEffect(() => {
         if (!hasSpoken.current) {
             hasSpoken.current = true;
-            speak(t('tracing.instruction', { letter: displayChar.toLowerCase() }));
+            speak(t('tracing.instruction', { letter: displayChar }), { shouldLock: true });
         }
     }, [displayChar, speak, t]);
 
     const handleSuccess = useCallback(() => {
-        if (done) return;
+        if (doneRef.current) return;
+        doneRef.current = true;
         setDone(true);
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         playSuccess();
         recordSuccess();
-        speak(displayChar.toLowerCase());
-        setTimeout(() => speak(t('tracing.successMessage')), 500);
+        // Speak the letter clearly using the professional asset
+        speak(guide.char.toLowerCase());
+        setTimeout(() => speak(t('tracing.successMessage')), 1200);
         showFeedback({ type: 'success', message: t('tracing.greatTracing'), emoji: '🎨' });
-        setTimeout(nextLevel, 2500);
+        setTimeout(nextLevel, 3000);
     }, [done, displayChar, nextLevel, playSuccess, recordSuccess, showFeedback, speak, t]);
 
-    React.useEffect(
-        () => () => {
-            if (timerRef.current) clearTimeout(timerRef.current);
-        },
-        []
-    );
+    const panResponder = useMemo(() => 
+        PanResponder.create({
+            onStartShouldSetPanResponder: () => !isBusy,
+            onMoveShouldSetPanResponder: () => !isBusy,
+            onPanResponderGrant: (evt) => {
+                if (done || isBusy) return;
+                const { locationX, locationY } = evt.nativeEvent;
+                setCurrentPath(`M${locationX},${locationY}`);
+                
+                // Update checkpoints on start
+                const newlyVisited = updateCheckpoints(checkpointsRef.current, { x: locationX, y: locationY }, 30);
+                if (newlyVisited > 0) {
+                    setCheckpoints([...checkpointsRef.current]);
+                    Haptics.selectionAsync();
+                }
+            },
+            onPanResponderMove: (evt) => {
+                if (done || isBusy) return;
+                const { locationX, locationY } = evt.nativeEvent;
+                setCurrentPath(prev => prev + ` L${locationX},${locationY}`);
+
+                // Real-time progress check
+                const newlyVisited = updateCheckpoints(checkpointsRef.current, { x: locationX, y: locationY }, 30);
+                if (newlyVisited > 0) {
+                    setCheckpoints([...checkpointsRef.current]);
+                    Haptics.selectionAsync();
+
+                    // Check if finished
+                    const result = checkTracingProgress(checkpointsRef.current);
+                    if (result.isValid) {
+                        handleSuccess();
+                    }
+                }
+            },
+            onPanResponderRelease: () => {
+                if (done || isBusy) return;
+                setCurrentPath('');
+                // If they release but haven't finished, we keep their progress on screen
+                setPaths(prev => [...prev, currentPath]);
+            },
+        }), [isBusy, done, handleSuccess, guideDString]);
 
     const clearBoard = () => {
         setPaths([]);
         setCurrentPath('');
-        currentPointsRef.current = [];
-        allPointsRef.current = [];
-        currentPathRef.current = '';
+        const points = generateCheckpoints(guideDString, 20);
+        const cps = points.map(p => ({ point: p, visited: false }));
+        setCheckpoints(cps);
+        checkpointsRef.current = cps;
     };
-
-    const panResponder = useRef(
-        PanResponder.create({
-            onStartShouldSetPanResponder: () => true,
-            onMoveShouldSetPanResponder: () => true,
-            onPanResponderGrant: (evt) => {
-                const { locationX, locationY } = evt.nativeEvent;
-                if (timerRef.current) clearTimeout(timerRef.current);
-
-                currentPointsRef.current = [{ x: locationX, y: locationY }];
-                allPointsRef.current.push({ x: locationX, y: locationY });
-                const newPath = `M${locationX},${locationY}`;
-                currentPathRef.current = newPath;
-                setCurrentPath(newPath);
-                Haptics.selectionAsync();
-            },
-            onPanResponderMove: (evt) => {
-                const { locationX, locationY } = evt.nativeEvent;
-                currentPointsRef.current.push({ x: locationX, y: locationY });
-                allPointsRef.current.push({ x: locationX, y: locationY });
-                if (allPointsRef.current.length > 2400) {
-                    allPointsRef.current = allPointsRef.current.slice(-1600);
-                }
-                currentPathRef.current += ` L${locationX},${locationY}`;
-                setCurrentPath(currentPathRef.current);
-            },
-            onPanResponderRelease: () => {
-                const result = validateTraceStroke(allPointsRef.current, guideDString);
-
-                if (result.isValid) {
-                    if (currentPathRef.current) setPaths(prev => [...prev, currentPathRef.current]);
-                    setCurrentPath('');
-                    timerRef.current = setTimeout(handleSuccess, 500);
-                    return;
-                }
-
-                if (result.reason === 'start_off_path') {
-                    allPointsRef.current = allPointsRef.current.slice(0, allPointsRef.current.length - currentPointsRef.current.length);
-                    setCurrentPath('');
-                    const now = Date.now();
-                    if (now - lastHintAtRef.current > 2000) {
-                        lastHintAtRef.current = now;
-                        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-                        playError();
-                        showFeedback({ type: 'hint', message: t('tracing.startGreen'), emoji: '🟢' }, 1200);
-                    }
-                } else if (result.reason === 'off_path') {
-                    allPointsRef.current = allPointsRef.current.slice(0, allPointsRef.current.length - currentPointsRef.current.length);
-                    setCurrentPath('');
-                    const now = Date.now();
-                    if (now - lastHintAtRef.current > 2000) {
-                        lastHintAtRef.current = now;
-                        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-                        playError();
-                        showFeedback({ type: 'hint', message: t('tracing.tryFollowing'), emoji: '✍️' }, 1200);
-                    }
-                } else {
-                    if (currentPathRef.current) setPaths(prev => [...prev, currentPathRef.current]);
-                    setCurrentPath('');
-                }
-            },
-        })
-    ).current;
 
     return (
         <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
@@ -270,35 +278,35 @@ function TracingGameInner({ onResetLevel, onRestartGame, letterCase, setLetterCa
                 <GameInstruction text={t('tracing.instruction', { letter: displayChar })} />
 
                 <View style={styles.canvasContainer}>
-                    {/* The drawing layer with clipPath constraint */}
                     <View style={styles.drawLayer} {...panResponder.panHandlers}>
                         <Svg height={CANVAS_SIZE} width={CANVAS_SIZE} pointerEvents="none">
                             <Defs>
                                 <ClipPath id="roadClip">
-                                    <Path d={guideDString} stroke="black" strokeWidth={55} fill="none" strokeLinecap="round" strokeLinejoin="round" />
+                                    <Path d={guideDString} stroke="black" strokeWidth={80} fill="none" strokeLinecap="round" strokeLinejoin="round" />
                                 </ClipPath>
                             </Defs>
 
-                            {/* Dotted guide path - the "road" underneath */}
-                            <Path d={guideDString} stroke="#e0e7ff" strokeWidth={50} fill="none" strokeLinecap="round" strokeLinejoin="round" />
+                            {/* Base guide path */}
+                            <Path d={guideDString} stroke="#e0e7ff" strokeWidth={65} fill="none" strokeLinecap="round" strokeLinejoin="round" />
                             <Path d={guideDString} stroke="#a5b4fc" strokeWidth={4} fill="none" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="12,8" />
 
-                            {/* User traces inside this group, which is clipped to the road */}
-                            <G clipPath="url(#roadClip)">
-                                {paths.map((d, i) => (
-                                    <Path key={i} d={d} stroke={colors.accentPrimary} strokeWidth={60} fill="none" strokeLinecap="round" strokeLinejoin="round" opacity={0.6} />
-                                ))}
-                                <Path d={currentPath} stroke={colors.accentSecondary} strokeWidth={60} fill="none" strokeLinecap="round" strokeLinejoin="round" />
-                            </G>
+                            {/* Progress feedback - "Liner" made of dense overlapping dots */}
+                            {checkpoints.map((cp, i) => cp.visited && (
+                                <Circle key={i} cx={cp.point.x} cy={cp.point.y} r={20} fill={colors.accentPrimary} />
+                            ))}
 
-                            {/* Start dot on top */}
+                            {/* Indicators */}
                             <Circle cx={startDot.x} cy={startDot.y} r={16} fill="#22c55e" />
                             <Circle cx={startDot.x} cy={startDot.y} r={8} fill="#fff" />
                         </Svg>
                     </View>
                 </View>
 
-                <Text style={styles.hintText}>👆 {t('tracing.startGreen')}</Text>
+                <View style={[styles.hintContainer, feedback?.type === 'success' && styles.successHint]}>
+                    <Text style={styles.hintText}>
+                        {feedback ? `${feedback.emoji} ${feedback.message}` : `👆 ${t('tracing.startGreen')}`}
+                    </Text>
+                </View>
             </View>
 
             <View style={styles.footer}>
@@ -307,9 +315,7 @@ function TracingGameInner({ onResetLevel, onRestartGame, letterCase, setLetterCa
                 </View>
             </View>
 
-            {feedback && (
-                <FeedbackOverlay visible={!!feedback} type={feedback.type} message={feedback.message} emoji={feedback.emoji} compact={feedback.type === 'success'} position="top" />
-            )}
+
         </SafeAreaView>
     );
 }
@@ -329,7 +335,9 @@ const styles = StyleSheet.create({
     ghostLetter: { fontSize: CANVAS_SIZE * 0.65, fontWeight: 'bold', color: '#f3f4f6' },
     guideLayer: { ...StyleSheet.absoluteFillObject },
     drawLayer: { ...StyleSheet.absoluteFillObject, backgroundColor: 'transparent' },
-    hintText: { marginTop: spacing.md, fontSize: fontSize.md, color: colors.textSecondary, fontWeight: '500' },
+    hintContainer: { marginTop: spacing.lg, paddingHorizontal: spacing.xl, backgroundColor: '#f0fdf4', borderRadius: 20, paddingVertical: spacing.md, borderWidth: 1, borderColor: '#bbf7d0', minHeight: 60, justifyContent: 'center' },
+    successHint: { backgroundColor: '#dcfce7', borderColor: '#4ade80' },
+    hintText: { fontSize: fontSize.lg, color: '#166534', fontWeight: 'bold', textAlign: 'center' },
     footer: { padding: spacing.lg, flexDirection: 'row', justifyContent: 'center' },
     buttonWrapper: { width: '50%' },
 });
