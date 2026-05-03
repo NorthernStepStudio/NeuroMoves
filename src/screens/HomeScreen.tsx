@@ -9,16 +9,13 @@ import { SyncService } from '../services/SyncService';
 import { CompanionSyncService } from '../services/CompanionSyncService';
 import { SubscriptionService } from '../services/SubscriptionService';
 import { useAuth } from '../core/AuthContext';
-import { buildDailyPlan } from '../core/recommendations';
-import { ACTIVITIES } from '../data/activities';
 import { GAME_REGISTRY, GAME_SCREEN_MAP } from '../core/gameTypes';
 import { colors, spacing, borderRadius, shadows, fontSize } from '../theme/colors';
-import { runNeuromovesPlanSaveExport, shareFirstArtifact, summarizeAgentResult } from '../responseos/adapter';
+
 // Category config
 const CATEGORIES = [
   { key: 'motor', label: 'Motor Skills', icon: '🤸', color: '#22c55e' },
   { key: 'cognitive', label: 'Cognitive', icon: '🧠', color: '#3b82f6' },
-  { key: 'speech', label: 'Speech', icon: '🗣️', color: '#a855f7' },
   { key: 'sensory', label: 'Sensory', icon: '👂', color: '#f97316' },
 ];
 
@@ -35,6 +32,7 @@ function formatAge(months: number): string {
 function getAgeAppropriateActivities(ageMonths: number) {
   // Filter games suitable for age
   return GAME_REGISTRY.filter(game => {
+    if (!game.enabled) return false;
     // All activities are appropriate, but we can prioritize
     if (ageMonths < 24) {
       // Younger: focus on motor and simple cognitive
@@ -66,7 +64,6 @@ export default function HomeScreen() {
   });
   const [gameProgress, setGameProgress] = useState<Record<string, GameProgress>>({});
   const [hasPro, setHasPro] = useState(false);
-  const [responseOsBusy, setResponseOsBusy] = useState(false);
 
   // Load all data when screen comes into focus
   useFocusEffect(
@@ -84,20 +81,21 @@ export default function HomeScreen() {
       if (selectedChild?.id) {
         SyncService.performSync(selectedChild.id).then(result => {
           if (result.success && (result.attemptsSynced > 0 || result.progressSynced > 0)) {
-            console.log(`[HomeScreen] Sync complete: ${result.attemptsSynced} attempts, ${result.progressSynced} progress`);
+            if (__DEV__) {
+              console.log(`[HomeScreen] Sync complete: ${result.attemptsSynced} attempts, ${result.progressSynced} progress`);
+            }
             loadAttempts().then(setAttempts);
             loadGameProgress().then(p => setGameProgress(p as Record<string, GameProgress>));
           }
         });
         CompanionSyncService.sync(selectedChild.id).catch(error => {
-          console.warn('[CompanionSync] Background sync skipped:', error);
+          if (__DEV__) {
+            console.warn('[CompanionSync] Background sync skipped:', error);
+          }
         });
       }
     }, [selectedChild?.id])
   );
-
-  const plan = buildDailyPlan(ACTIVITIES, attempts, settings);
-  const focusActivity = plan[0];
 
   const greeting = (() => {
     const hour = new Date().getHours();
@@ -113,19 +111,19 @@ export default function HomeScreen() {
   const recentlyPlayed = (Object.entries(gameProgress) as [string, GameProgress][])
     .filter(([_, progress]) => progress.lastPlayedAt)
     .sort((a, b) => new Date(b[1].lastPlayedAt!).getTime() - new Date(a[1].lastPlayedAt!).getTime())
-    .slice(0, 3)
-    .map(([gameId, progress]) => ({
-      ...GAME_REGISTRY.find(g => g.id === gameId)!,
-      progress,
-    }))
-    .filter(g => g.id); // Filter out undefined
+    .map(([gameId, progress]) => {
+      const game = GAME_REGISTRY.find(g => g.id === gameId);
+      if (!game || !game.enabled) return null;
+      return { ...game, progress };
+    })
+    .filter(g => g !== null);
 
   // Get last played for "Continue" card
   const lastPlayed = recentlyPlayed[0];
 
   // Calculate category progress
   const categoryProgress = CATEGORIES.map(cat => {
-    const categoryGames = GAME_REGISTRY.filter(g => g.category === cat.key);
+    const categoryGames = GAME_REGISTRY.filter(g => g.category === cat.key && g.enabled);
     const totalLevels = categoryGames.reduce((sum, g) => sum + g.maxLevels, 0);
     const completedLevels = categoryGames.reduce((sum, g) => {
       const progress = gameProgress[g.id];
@@ -150,39 +148,6 @@ export default function HomeScreen() {
     const screenName = GAME_SCREEN_MAP[gameId as keyof typeof GAME_SCREEN_MAP];
     if (screenName) {
       (navigation.navigate as any)(screenName);
-    }
-  };
-
-  const handleResponseOsPlan = async () => {
-    if (responseOsBusy) return;
-
-    setResponseOsBusy(true);
-    try {
-      const sessionId = selectedChild?.id ? `neuromoves-${selectedChild.id}` : 'neuromoves-anonymous';
-      const userId = selectedChild?.id ? `child:${selectedChild.id}` : 'anonymous';
-      const goal = selectedChild?.name
-        ? `Create today's home practice plan for ${selectedChild.name}`
-        : "Create today's home practice plan";
-
-      const result = await runNeuromovesPlanSaveExport({
-        goal,
-        userId,
-        sessionId,
-        exportFormat: 'csv',
-        appState: {
-          screen: 'Home',
-          childAgeMonths: settings.childAgeMonths,
-          hasPro,
-        },
-      });
-
-      await shareFirstArtifact(result).catch(() => false);
-      Alert.alert('ResponseOS', summarizeAgentResult(result));
-    } catch (error) {
-      console.warn('[HomeScreen] ResponseOS workflow failed:', error);
-      Alert.alert('ResponseOS', 'Unable to generate a plan right now. Please try again.');
-    } finally {
-      setResponseOsBusy(false);
     }
   };
 
@@ -258,15 +223,6 @@ export default function HomeScreen() {
               <Text style={styles.toolMeta}>{t('home.customize')}</Text>
             </Pressable>
           </View>
-          <Pressable
-            onPress={handleResponseOsPlan}
-            style={({ pressed }) => [styles.responseOsCard, pressed && styles.cardPressed]}
-          >
-            <Text style={styles.responseOsTitle}>{t('home.responseOs')}</Text>
-            <Text style={styles.responseOsMeta}>
-              {responseOsBusy ? t('home.generatingPlan') : t('home.generatePlan')}
-            </Text>
-          </Pressable>
         </View>
 
         {/* Continue Where You Left Off */}
@@ -387,30 +343,6 @@ export default function HomeScreen() {
                 </View>
               </Pressable>
             ))}
-          </View>
-        )}
-
-        {/* Today's Focus (original daily plan) */}
-        {focusActivity && (
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>⭐ {t('home.dailyPractice')}</Text>
-            </View>
-            <Pressable
-              onPress={() => (navigation.navigate as any)('ActivityDetail', { activityId: focusActivity.id })}
-              style={({ pressed }) => [styles.focusCard, pressed && styles.cardPressed]}
-            >
-              <Text style={styles.focusTitle}>{focusActivity.title}</Text>
-              <Text style={styles.focusDesc} numberOfLines={2}>
-                {focusActivity.description}
-              </Text>
-              <View style={styles.focusFooter}>
-                <Text style={styles.focusDuration}>⏱️ {focusActivity.durationMinutes} min</Text>
-                <View style={styles.startButton}>
-                  <Text style={styles.startButtonText}>{t('home.start')}</Text>
-                </View>
-              </View>
-            </Pressable>
           </View>
         )}
 
@@ -662,24 +594,6 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     textAlign: 'center'
   },
-  responseOsCard: {
-    marginTop: spacing.sm,
-    backgroundColor: colors.cardBg,
-    borderWidth: 1,
-    borderColor: colors.cardBorder,
-    borderRadius: borderRadius.md,
-    padding: spacing.md,
-  },
-  responseOsTitle: {
-    fontSize: fontSize.base,
-    fontWeight: '700',
-    color: colors.textPrimary,
-  },
-  responseOsMeta: {
-    marginTop: 4,
-    fontSize: fontSize.xs,
-    color: colors.textMuted,
-  },
 
   // Progress Grid
   progressGrid: {
@@ -772,47 +686,6 @@ const styles = StyleSheet.create({
   playButtonText: {
     color: '#fff',
     fontSize: 12,
-  },
-
-  // Focus Card
-  focusCard: {
-    backgroundColor: colors.focusYellow,
-    borderRadius: borderRadius.lg,
-    padding: spacing.lg,
-    borderWidth: 1,
-    borderColor: '#fde68a',
-  },
-  focusTitle: {
-    fontSize: fontSize.lg,
-    fontWeight: '700',
-    color: colors.textPrimary,
-    marginBottom: spacing.sm,
-  },
-  focusDesc: {
-    fontSize: fontSize.sm,
-    color: '#78350f',
-    marginBottom: spacing.md,
-    opacity: 0.8,
-  },
-  focusFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  focusDuration: {
-    fontSize: fontSize.sm,
-    color: '#78350f',
-  },
-  startButton: {
-    backgroundColor: colors.accentPrimary,
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: borderRadius.md,
-  },
-  startButtonText: {
-    color: '#fff',
-    fontWeight: '700',
-    fontSize: fontSize.sm,
   },
 
   // Explore Button

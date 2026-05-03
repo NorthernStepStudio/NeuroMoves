@@ -30,7 +30,7 @@ const LANGUAGE_CODE_KEY = '@neuromoves_language';
 // Legal content
 const PRIVACY_POLICY = `Privacy Policy
 
-NeuroMoves ("we", "our", or "us") is committed to protecting your privacy.
+Northern Step Studio ("we", "our", or "us") is committed to protecting your privacy.
 This application is designed for parents to use with their children. We do not collect personally identifiable information from children. All child profiles, progress data, and daily journals are stored locally on your device unless you explicitly choose to back them up or sync them.
 
 If you create a parent account, we may collect your email address for authentication and account recovery purposes. We use standard analytics to understand how the app is used and to improve the experience. We do not share your data with advertisers.
@@ -39,34 +39,34 @@ Children's Privacy:
 This app is designed for parents to use with their children. We comply with COPPA (Children's Online Privacy Protection Act) requirements.
 
 Contact:
-For privacy concerns, contact us at privacy@reallifesteps.app`;
+For privacy concerns, contact us at privacy@northernstepstudio.com`;
 
 const TERMS_OF_SERVICE = `Terms of Service
 
-By using NeuroMoves, you agree to these terms.
+By using this application developed by Northern Step Studio, you agree to these terms.
 The app provides educational content and tracking tools. You are responsible for the physical safety of your child during all activities. The content is for informational purposes only and is not a substitute for professional medical advice, diagnosis, or treatment.
 
 We reserve the right to modify these terms or the app's features at any time. Accounts that violate our policies may be terminated.`;
 
 const DISCLAIMER_TEXT = `Medical Disclaimer
 
-NeuroMoves does not diagnose, treat, or cure any condition. Always consult with a licensed Speech-Language Pathologist or Occupational Therapist for professional guidance.
+This application does not diagnose, treat, or cure any condition. Always consult with a licensed Speech-Language Pathologist or Occupational Therapist for professional guidance.
 The activities in this app are designed as supplementary developmental practice, not clinical therapy. Use this app at your own risk.
 
 Independence Statement:
-NeuroMoves is an independent educational app developed to support families. We are not affiliated with, endorsed by, or connected to any medical institution, healthcare organization, government agency, or educational authority.
+Northern Step Studio is an independent educational studio developed to support families. We are not affiliated with, endorsed by, or connected to any medical institution, healthcare organization, government agency, or educational authority.
 
 The activities provided are general developmental exercises designed to complement—not replace—professional therapy and guidance.`;
 
-const ABOUT_TEXT = `About NeuroMoves
+const ABOUT_TEXT = `About Northern Step Studio
 
-NeuroMoves is an independent educational app created to help children develop essential skills from an early age—and to support parents in guiding that journey.
+We are an independent educational studio created to help children develop essential skills from an early age—and to support parents in guiding that journey.
 
 Our Purpose:
-We believe in the power of early development. Our goal is simple: help kids build the motor, speech, cognitive, and sensory skills they need—as early as possible—through fun, parent-guided daily practice.
+We believe in the power of early development. Our goal is simple: help kids build motor, cognitive, and sensory skills through fun, parent-guided activities.
 
 Who We Are:
-We are independent developers passionate about early childhood development. We created this app to make developmental practice accessible, engaging, and effective for families everywhere.
+We are independent developers passionate about early childhood development. We created our suite of tools to make developmental practice accessible, engaging, and effective for families everywhere.
 
 What We Are NOT:
 • We are not a medical institution
@@ -101,11 +101,6 @@ Activities that build problem-solving and recognition skills.
 • Body Parts - Builds body awareness and vocabulary
 • Size Ordering - Develops comparison and sequencing skills
 
-🗣️ SPEECH
-Activities that support communication development.
-
-• Baby Signs - Introduces basic sign language to support early communication
-
 👂 SENSORY
 Activities that engage sensory processing.
 
@@ -118,7 +113,7 @@ interface SettingRowProps {
   title: string;
   subtitle?: string;
   onPress?: () => void;
-  rightElement?: React.ReactNode;
+  rightElement?: React.JSX.Element | null;
 }
 
 function SettingRow({ icon, title, subtitle, onPress, rightElement }: SettingRowProps) {
@@ -131,9 +126,9 @@ function SettingRow({ icon, title, subtitle, onPress, rightElement }: SettingRow
       <Text style={styles.settingIcon}>{icon}</Text>
       <View style={styles.settingContent}>
         <Text style={styles.settingTitle}>{title}</Text>
-        {subtitle && <Text style={styles.settingSubtitle}>{subtitle}</Text>}
+        {subtitle ? <Text style={styles.settingSubtitle}>{subtitle}</Text> : null}
       </View>
-      {rightElement || (onPress && <Text style={styles.chevron}>›</Text>)}
+      {rightElement ?? (onPress ? <Text style={styles.chevron}>{'\u203A'}</Text> : null)}
     </Pressable>
   );
 }
@@ -280,8 +275,7 @@ export default function SettingsScreen() {
                   value={String(Math.floor(settings.childAgeMonths / 12))}
                   onChangeText={(text) => {
                     const years = parseInt(text) || 0;
-                    const months = settings.childAgeMonths % 12;
-                    const total = Math.max(0, Math.min(10, years)) * 12 + months;
+                    const total = Math.max(0, Math.min(10, years)) * 12;
                     setSettings({ ...settings, childAgeMonths: total });
                     saveSettings({ ...settings, childAgeMonths: total });
                   }}
@@ -297,43 +291,10 @@ export default function SettingsScreen() {
                 </Pressable>
               </View>
             </View>
-
-            {/* Months */}
-            <View style={styles.ageSelectorGroup}>
-              <Text style={styles.ageSelectorLabel}>Months</Text>
-              <View style={styles.ageSelectorRow}>
-                <Pressable
-                  onPress={() => updateAge(-1)}
-                  style={({ pressed }) => [styles.ageButton, pressed && styles.ageButtonPressed]}
-                >
-                  <Text style={styles.ageButtonText}>−</Text>
-                </Pressable>
-                <TextInput
-                  style={styles.ageInput}
-                  value={String(settings.childAgeMonths % 12)}
-                  onChangeText={(text) => {
-                    const years = Math.floor(settings.childAgeMonths / 12);
-                    const months = Math.max(0, Math.min(11, parseInt(text) || 0));
-                    const total = years * 12 + months;
-                    setSettings({ ...settings, childAgeMonths: total });
-                    saveSettings({ ...settings, childAgeMonths: total });
-                  }}
-                  keyboardType="number-pad"
-                  maxLength={2}
-                  selectTextOnFocus
-                />
-                <Pressable
-                  onPress={() => updateAge(1)}
-                  style={({ pressed }) => [styles.ageButton, pressed && styles.ageButtonPressed]}
-                >
-                  <Text style={styles.ageButtonText}>+</Text>
-                </Pressable>
-              </View>
-            </View>
           </View>
 
           <Text style={styles.ageSummary}>
-            Total: {settings.childAgeMonths} months
+            Selected: {Math.floor(settings.childAgeMonths / 12)} years
           </Text>
         </View>
         <View style={styles.card}>
@@ -370,13 +331,6 @@ export default function SettingsScreen() {
             title={t('settings.avatarStudio', { defaultValue: 'Avatar Studio' })}
             subtitle={t('settings.avatarSub', { defaultValue: 'Customize companion character rewards' })}
             onPress={() => navigation.navigate('AvatarStudio')}
-          />
-          <View style={styles.divider} />
-          <SettingRow
-            icon="⭐"
-            title={t('settings.upgradePro', { defaultValue: 'Upgrade to Pro' })}
-            subtitle={t('settings.proSub', { defaultValue: 'Unlock all activities and advanced pathways' })}
-            onPress={() => navigation.navigate('Paywall')}
           />
         </View>
 
@@ -496,66 +450,13 @@ export default function SettingsScreen() {
           </View>
         </View>
 
-        {/* Sensory & Haptics */}
-        <SectionHeader title={t('settings.sensoryHaptics', { defaultValue: 'Sensory & Haptics' })} />
-        <View style={styles.card}>
-          <SettingRow
-            icon="📳"
-            title={t('settings.haptic', { defaultValue: 'Haptic Feedback' })}
-            subtitle={t('settings.hapticSub', { defaultValue: 'Vibration patterns during gameplay' })}
-            rightElement={
-              <Switch
-                value={settings.hapticEnabled}
-                onValueChange={(val) => {
-                  const next = { ...settings, hapticEnabled: val };
-                  saveAndReload(next);
-                }}
-                trackColor={{ false: '#e2e8f0', true: colors.accentPrimary }}
-                thumbColor="#fff"
-              />
-            }
-          />
-          <View style={styles.divider} />
-          <View style={styles.audioRow}>
-            <Text style={styles.audioIcon}>⚡</Text>
-            <View style={styles.audioContent}>
-              <Text style={styles.audioTitle}>{t('settings.tactile', { defaultValue: 'Tactile Strength' })}</Text>
-              <Text style={styles.audioSubtitle}>{settings.hapticStrength.charAt(0).toUpperCase() + settings.hapticStrength.slice(1)} {t('settings.intensity', { defaultValue: 'intensity' })}</Text>
-            </View>
-            <View style={styles.audioControls}>
-              {(['low', 'medium', 'high'] as const).map((level) => (
-                <Pressable
-                  key={level}
-                  onPress={() => {
-                    const next = { ...settings, hapticStrength: level };
-                    saveAndReload(next);
-                  }}
-                  style={[
-                    styles.audioButton,
-                    { width: 60 },
-                    settings.hapticStrength === level && { backgroundColor: colors.accentPrimary }
-                  ]}
-                >
-                  <Text style={[
-                    styles.audioButtonText,
-                    { fontSize: 12 },
-                    settings.hapticStrength === level && { color: '#fff' }
-                  ]}>
-                    {level.toUpperCase()}
-                  </Text>
-                </Pressable>
-              ))}
-            </View>
-          </View>
-        </View>
-
         {/* About */}
         <SectionHeader title={t('settings.about', { defaultValue: 'About' })} />
         <View style={styles.card}>
           <SettingRow
             icon="🏠"
-            title={t('settings.aboutApp', { defaultValue: 'About NeuroMoves' })}
-            subtitle={t('settings.aboutSub', { defaultValue: 'Who we are and our mission' })}
+            title={t('settings.aboutApp', { defaultValue: 'About Northern Step Studio' })}
+            subtitle={t('settings.aboutSub', { defaultValue: 'Our mission and studio story' })}
             onPress={() => setModalContent({ title: t('settings.aboutApp'), content: ABOUT_TEXT })}
           />
           <View style={styles.divider} />
@@ -569,8 +470,8 @@ export default function SettingsScreen() {
           <SettingRow
             icon="💬"
             title={t('settings.contact', { defaultValue: 'Contact Support' })}
-            subtitle="support@reallifesteps.app"
-            onPress={() => openLink('mailto:support@reallifesteps.app')}
+            subtitle="support@northernstepstudio.com"
+            onPress={() => openLink('mailto:support@northernstepstudio.com')}
           />
           <View style={styles.divider} />
           <SettingRow
@@ -615,29 +516,6 @@ export default function SettingsScreen() {
               <Text style={styles.dangerSubtitle}>{t('settings.resetSub', { defaultValue: 'Clear all activity and game history' })}</Text>
             </View>
           </Pressable>
-          <View style={styles.divider} />
-          <SettingRow
-            icon="📦"
-            title={t('settings.exportData', { defaultValue: 'Export My Data' })}
-            subtitle={t('settings.exportSub', { defaultValue: 'Download all your data as JSON' })}
-            onPress={async () => {
-              try {
-                const token = await AccountService.getAccessToken();
-                if (!token) { Alert.alert('Error', 'Not signed in'); return; }
-                const resp = await fetch(`${API_BASE_URL}/auth/export-data`, {
-                  headers: { Authorization: `Bearer ${token}` },
-                });
-                const json = await resp.json();
-                if (json.success) {
-                  Alert.alert('Data Exported', 'Your data has been retrieved. In a future update you will be able to save this as a file.\n\nChildren: ' + (json.data?.children?.length ?? 0));
-                } else {
-                  Alert.alert('Error', json.error || 'Export failed');
-                }
-              } catch (e: any) {
-                Alert.alert('Error', e.message || 'Could not export data');
-              }
-            }}
-          />
           <View style={styles.divider} />
           <Pressable
             onPress={() => {
@@ -716,7 +594,7 @@ export default function SettingsScreen() {
         </View>
 
         <Text style={styles.footerText}>
-          {t('settings.footer', { defaultValue: 'Made with ❤️ for parents and children' })}
+          {t('settings.footer', { defaultValue: 'Created by Northern Step Studio' })}
         </Text>
       </ScrollView>
 
@@ -900,8 +778,10 @@ const styles = StyleSheet.create({
   },
   footerText: {
     textAlign: 'center',
-    color: colors.textMuted,
-    fontSize: 13,
+    color: colors.textPrimary,
+    fontSize: 16,
+    fontWeight: '700',
+    letterSpacing: 0.3,
     marginTop: spacing.xl,
   },
   // Modal styles

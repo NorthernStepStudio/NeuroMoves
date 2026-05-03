@@ -145,7 +145,7 @@ export default function GamesScreen() {
   const { t } = useTranslation();
   const [hasPro, setHasPro] = useState(false);
   const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({
-    motor: true,
+    motor: false,
     cognitive: false,
     sensory: false
   });
@@ -179,10 +179,12 @@ export default function GamesScreen() {
     }));
   };
 
+  const activeGames = GAME_REGISTRY.filter(game => game.enabled);
+
   const gamesByCategory = CATEGORIES
     .map(category => ({
       ...category,
-      games: GAME_REGISTRY.filter(game => game.category === category.key)
+      games: activeGames.filter(game => game.category === category.key)
     }))
     .filter(category => category.games.length > 0);
 
@@ -191,7 +193,7 @@ export default function GamesScreen() {
       <View style={styles.header}>
         <Text style={styles.headerTitle}>{t('nav.activities', { defaultValue: 'Activities' })}</Text>
         <Text style={styles.headerSubtitle}>
-          {GAME_REGISTRY.length} {t('activities.ready', { defaultValue: 'activities ready.' })} {hasPro ? t('activities.proActive', { defaultValue: 'Pro active.' }) : t('activities.freeActive', { defaultValue: 'Free tier active.' })}
+          {activeGames.length} {t('activities.ready', { defaultValue: 'activities ready.' })} {hasPro ? t('activities.proActive', { defaultValue: 'Pro active.' }) : t('activities.freeActive', { defaultValue: 'Free tier active.' })}
         </Text>
       </View>
 

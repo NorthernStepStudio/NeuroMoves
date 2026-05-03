@@ -1,0 +1,526 @@
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import {
+    View,
+    Text,
+    StyleSheet,
+    Dimensions,
+    Pressable,
+    Alert,
+} from 'react-native';
+import Animated, {
+    useSharedValue,
+    useAnimatedStyle,
+    withSpring,
+    withTiming,
+    withRepeat,
+    withSequence,
+    Easing,
+    runOnJS,
+    useDerivedValue
+} from 'react-native-reanimated';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
+import { GameHeader, FeedbackOverlay, GameControlHeader } from '../../../components/GameComponents';
+import { useGame } from '../../../core/GameContext';
+import { colors, spacing, borderRadius, fontSize } from '../../../theme/colors';
+import * as Haptics from 'expo-haptics';
+import { FloatingFeedback } from '../../../components/FloatingFeedback';
+import { useTranslation } from 'react-i18next';
+
+const { width, height } = Dimensions.get('window');
+
+// STABLE BOTTOM-ANCHORED COORDINATES
+const PLATFORM_BOTTOM = 120;
+const SPAWN_BOTTOM = height - 350;
+const PLATFORM_WIDTH = 240;
+
+const DIFFICULTY_CONFIG = {
+    1: { blockSize: 100, tolerance: 40 },
+    2: { blockSize: 95, tolerance: 38 },
+    3: { blockSize: 90, tolerance: 35 },
+    4: { blockSize: 85, tolerance: 32 },
+    5: { blockSize: 80, tolerance: 30 },
+    6: { blockSize: 75, tolerance: 28 },
+    7: { blockSize: 70, tolerance: 25 },
+    8: { blockSize: 65, tolerance: 22 },
+    9: { blockSize: 60, tolerance: 20 },
+    10: { blockSize: 55, tolerance: 18 },
+};
+
+const BLOCK_COLORS = [
+    '#ef4444',
+    '#3b82f6',
+    '#22c55e',
+    '#eab308',
+    '#a855f7',
+];
+
+interface BlockData {
+    id: number;
+    color: string;
+    x: Animated.SharedValue<number>;
+    y: Animated.SharedValue<number>;
+    rotation: Animated.SharedValue<number>;
+    isPlaced: boolean;
+}
+
+export default function StackingGame() {
+    const [restartKey, setRestartKey] = useState(0);
+    const { gameState, resetCurrentGameProgress, startGame, currentGameId } = useGame();
+
+    useEffect(() => {
+        if (currentGameId !== 'stacking') {
+            startGame('stacking');
+        }
+    }, [currentGameId]);
+
+    const handleResetLevel = useCallback(() => {
+        setRestartKey(k => k + 1);
+    }, []);
+
+    const handleRestartGame = useCallback(async () => {
+        await resetCurrentGameProgress();
+        setRestartKey(k => k + 1);
+    }, [resetCurrentGameProgress]);
+
+    const gameKey = `${restartKey}-${gameState.level}`;
+
+    return (
+        <StackingGameInner
+            key={gameKey}
+            onResetLevel={handleResetLevel}
+            onRestartGame={handleRestartGame}
+        />
+    );
+}
+
+interface StackingGameInnerProps {
+    onResetLevel: () => void;
+    onRestartGame: () => void;
+}
+
+function StackingGameInner({ onResetLevel, onRestartGame }: StackingGameInnerProps) {
+    const navigation = useNavigation();
+    const { gameState, nextLevel, recordSuccess, recordError, showFeedback, feedback, playSuccess, playError, settings, speak } = useGame();
+    const { t } = useTranslation();
+
+    const hasSpokenIntroRef = useRef(false);
+
+    const [blocks, setBlocks] = useState<BlockData[]>([]);
+    const [currentBlockIndex, setCurrentBlockIndex] = useState(0);
+    const [isHolding, setIsHolding] = useState(false);
+    const [parentPrompt, setParentPrompt] = useState<string | null>(null);
+    const [floatingLabels, setFloatingLabels] = useState<{ id: number; text: string; x: number; y: number }[]>([]);
+
+    // Platform Shared Values
+    const platformX = useSharedValue(width / 2 - PLATFORM_WIDTH / 2);
+
+    const levelCompleteHandledRef = useRef(false);
+    const blockIdRef = useRef(0);
+    const blockPositionsRef = useRef<{ [key: number]: { x: number, y: number } }>({});
+    const hasPassedValidDropZoneRef = useRef(false);
+
+    const ageMonths = settings?.childAgeMonths ?? 48;
+    const isPermissive = ageMonths < 60;
+    let ageMaxLevel = 10;
+    if (ageMonths < 48) ageMaxLevel = 3;
+    else if (ageMonths < 60) ageMaxLevel = 6;
+    else if (ageMonths < 96) ageMaxLevel = 8;
+
+    const effectiveLevel = Math.min(Math.max(gameState.level, 1), ageMaxLevel);
+    const params = DIFFICULTY_CONFIG[effectiveLevel as keyof typeof DIFFICULTY_CONFIG];
+
+    useEffect(() => {
+        const midX = width / 2 - PLATFORM_WIDTH / 2;
+        const minX = 20;
+        const maxX = width - PLATFORM_WIDTH - 20;
+
+        if (gameState.level >= 7) {
+            platformX.value = midX;
+            const duration = Math.max(2000 - (gameState.level - 7) * 400, 1000);
+            
+            platformX.value = withRepeat(
+                withSequence(
+                    withTiming(maxX, { duration: duration / 2, easing: Easing.inOut(Easing.sin) }),
+                    withTiming(midX, { duration: duration / 2, easing: Easing.inOut(Easing.sin) }),
+                    withTiming(minX, { duration: duration / 2, easing: Easing.inOut(Easing.sin) }),
+                    withTiming(midX, { duration: duration / 2, easing: Easing.inOut(Easing.sin) })
+                ),
+                -1,
+                false
+            );
+        } else if (gameState.level >= 3) {
+            platformX.value = minX + Math.random() * (maxX - minX);
+        } else {
+            platformX.value = midX;
+        }
+
+        const initialBlocks: BlockData[] = [];
+        for (let i = 0; i < 5; i++) {
+            initialBlocks.push({
+                id: blockIdRef.current++,
+                color: BLOCK_COLORS[i % BLOCK_COLORS.length],
+                x: { value: width / 2 - params.blockSize / 2 } as any, // This is not how useSharedValue works in state, but we'll fix it in render
+                y: { value: SPAWN_BOTTOM } as any,
+                rotation: { value: 0 } as any,
+                isPlaced: false,
+            });
+        }
+        // Actually, we can't store SharedValues in React state like that easily if we want them to be stable.
+        // But for this game, we'll use a component for each block.
+        setBlocks(initialBlocks);
+        setCurrentBlockIndex(0);
+        blockPositionsRef.current = {};
+
+        return () => {
+            // Cleanup happens automatically with Reanimated
+        };
+    }, [gameState.level, params.blockSize]);
+
+    useEffect(() => {
+        if (!hasSpokenIntroRef.current) {
+            speak(t('stacking.instruction'));
+            hasSpokenIntroRef.current = true;
+        }
+    }, [speak, t]);
+
+    const showParentPrompt = (type: 'start' | 'struggle' | 'success') => {
+        if (!settings?.parentModeEnabled) return;
+        let message = '';
+        switch (type) {
+            case 'start': message = t('stacking.parentStart'); break;
+            case 'struggle': message = t('stacking.parentStruggle'); break;
+            case 'success': message = t('stacking.parentSuccess'); break;
+        }
+        setParentPrompt(message);
+        setTimeout(() => setParentPrompt(null), 4000);
+    };
+
+    const handleSuccess = (idx: number, targetXOffset: number, targetY: number) => {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        playSuccess();
+        blockPositionsRef.current[idx] = { x: targetXOffset, y: targetY };
+        
+        setBlocks(prev => prev.map((b, i) => i === idx ? { ...b, isPlaced: true } : b));
+
+        // Floating label
+        setFloatingLabels(prev => [
+            ...prev,
+            {
+                id: Date.now(),
+                text: (idx + 1).toString(),
+                x: platformX.value + targetXOffset + params.blockSize / 2 - 20,
+                y: height - targetY - params.blockSize - 40
+            }
+        ]);
+
+        if (idx === 4) {
+            if (!levelCompleteHandledRef.current) {
+                levelCompleteHandledRef.current = true;
+                recordSuccess();
+                speak('5');
+                setTimeout(() => speak(t('stacking.towerBuilt')), 600);
+                showFeedback({ type: 'success', message: t('stacking.towerBuilt'), emoji: '🗼' });
+                showParentPrompt('success');
+                setTimeout(() => nextLevel(), 3500);
+            }
+        } else {
+            speak((idx + 1).toString());
+            setCurrentBlockIndex(idx + 1);
+            recordSuccess();
+        }
+    };
+
+    const handleError = () => {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+        playError();
+        recordError();
+    };
+
+    const handleResetLocal = () => {
+        Alert.alert(t('common.resetLevel', 'Reset Level'), t('stacking.resetConfirm', 'Clear current blocks?'), [
+            { text: t('common.cancel', 'Cancel'), style: 'cancel' },
+            { text: t('common.reset', 'Reset'), onPress: onResetLevel }
+        ]);
+    };
+
+    const handleRestartLocal = () => {
+        Alert.alert(t('common.restartGame', 'Restart Game'), t('stacking.restartConfirm', 'Go back to Level 1?'), [
+            { text: t('common.cancel', 'Cancel'), style: 'cancel' },
+            { text: t('common.restart', 'Restart'), style: 'destructive', onPress: onRestartGame }
+        ]);
+    };
+
+    const platformStyle = useAnimatedStyle(() => {
+        return {
+            left: platformX.value,
+        };
+    });
+
+    return (
+        <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+            <GameControlHeader
+                onExit={() => navigation.goBack()}
+                onResetLevel={handleResetLocal}
+                onRestartGame={handleRestartLocal}
+            />
+
+            <GameHeader title={t('stacking.title')} showScore={false} />
+
+            <View style={styles.header}>
+                <Text style={styles.subtitle}>{t('stacking.subtitle')}</Text>
+            </View>
+
+            <View style={styles.gameArea}>
+                {parentPrompt ? (
+                    <View style={styles.parentPromptContainer}>
+                        <Text style={styles.parentPromptLabel}>{t('common.parentTip', 'PARENT TIP:')}</Text>
+                        <Text style={styles.parentPromptText}>{parentPrompt}</Text>
+                    </View>
+                ) : null}
+                <View style={styles.groundBase} />
+                <Animated.View style={[styles.platform, platformStyle, { bottom: PLATFORM_BOTTOM, width: PLATFORM_WIDTH }]}>
+                    <Text style={styles.platformText}>{t('stacking.startHere')}</Text>
+                </Animated.View>
+
+                {blocks.map((block, index) => (
+                    <StackingBlock
+                        key={block.id}
+                        index={index}
+                        color={block.color}
+                        blockSize={params.blockSize}
+                        isCurrent={index === currentBlockIndex && !block.isPlaced}
+                        isPlaced={block.isPlaced}
+                        platformX={platformX}
+                        isPermissive={isPermissive}
+                        level={gameState.level}
+                        onSuccess={(x, y) => handleSuccess(index, x, y)}
+                        onError={handleError}
+                        prevBlockPos={index > 0 ? blockPositionsRef.current[index - 1] : undefined}
+                        setIsHolding={setIsHolding}
+                        isHolding={isHolding && index === currentBlockIndex}
+                    />
+                ))}
+            </View>
+
+            {feedback && (
+                <FeedbackOverlay
+                    visible={!!feedback}
+                    type={feedback.type}
+                    message={feedback.message}
+                    emoji={feedback.emoji}
+                    compact={feedback.type === 'success'}
+                    position="top"
+                />
+            )}
+
+            {floatingLabels.map(label => (
+                <FloatingFeedback
+                    key={label.id}
+                    text={label.text}
+                    x={label.x}
+                    y={label.y}
+                    onComplete={() => {
+                        setFloatingLabels(prev => prev.filter(l => l.id !== label.id));
+                    }}
+                />
+            ))}
+        </SafeAreaView>
+    );
+}
+
+interface BlockProps {
+    index: number;
+    color: string;
+    blockSize: number;
+    isCurrent: boolean;
+    isPlaced: boolean;
+    platformX: Animated.SharedValue<number>;
+    isPermissive: boolean;
+    level: number;
+    onSuccess: (x: number, y: number) => void;
+    onError: () => void;
+    prevBlockPos?: { x: number, y: number };
+    setIsHolding: (h: boolean) => void;
+    isHolding: boolean;
+}
+
+function StackingBlock({ index, color, blockSize, isCurrent, isPlaced, platformX, isPermissive, level, onSuccess, onError, prevBlockPos, setIsHolding, isHolding }: BlockProps) {
+    const translateX = useSharedValue(width / 2 - blockSize / 2);
+    const translateY = useSharedValue(SPAWN_BOTTOM);
+    const rotation = useSharedValue(0);
+    const scale = useSharedValue(1);
+
+    const contextX = useSharedValue(0);
+    const contextY = useSharedValue(0);
+    const hasPassedValidDropZone = useSharedValue(false);
+
+    const animatedX = useDerivedValue(() => {
+        if (isPlaced) {
+            return platformX.value + translateX.value;
+        }
+        return translateX.value;
+    });
+
+    const panGesture = Gesture.Pan()
+        .enabled(isCurrent)
+        .onStart(() => {
+            runOnJS(setIsHolding)(true);
+            hasPassedValidDropZone.value = false;
+            contextX.value = translateX.value;
+            contextY.value = translateY.value;
+            rotation.value = withSpring((Math.random() - 0.5) * 10);
+            scale.value = withSpring(1.05);
+        })
+        .onUpdate((event) => {
+            const currentX = contextX.value + event.translationX;
+            const currentY = contextY.value + event.translationY;
+            translateX.value = currentX;
+            translateY.value = currentY;
+
+            // Permissive Tracking
+            if (isPermissive) {
+                const dropXOffset = currentX - platformX.value;
+                const absoluteY = SPAWN_BOTTOM - (SPAWN_BOTTOM - currentY);
+                
+                let refXOffset = PLATFORM_WIDTH / 2 - blockSize / 2;
+                let refY = PLATFORM_BOTTOM + 30;
+                if (prevBlockPos) {
+                    refXOffset = prevBlockPos.x;
+                    refY = prevBlockPos.y + (blockSize * 0.7);
+                }
+
+                if (index === 0) {
+                    const groundDiffY = Math.abs(absoluteY - refY);
+                    const groundDiffX = Math.abs(dropXOffset - refXOffset);
+                    const horizontalTolerance = (level >= 7) ? 180 : 150;
+                    if (groundDiffY < 120 && groundDiffX < horizontalTolerance) {
+                        hasPassedValidDropZone.value = true;
+                    }
+                } else {
+                    const distY = Math.abs(absoluteY - refY);
+                    const distX = Math.abs(dropXOffset - refXOffset);
+                    if (distY < 80 && distX < blockSize * 0.9) {
+                        hasPassedValidDropZone.value = true;
+                    }
+                }
+            }
+        })
+        .onEnd((event) => {
+            runOnJS(setIsHolding)(false);
+            scale.value = withSpring(1);
+            
+            const dropXOffset = (contextX.value + event.translationX) - platformX.value;
+            const dropY = contextY.value + event.translationY;
+
+            let refXOffset = PLATFORM_WIDTH / 2 - blockSize / 2;
+            let refY = PLATFORM_BOTTOM + 30;
+            if (prevBlockPos) {
+                refXOffset = prevBlockPos.x;
+                refY = prevBlockPos.y + (blockSize * 0.7);
+            }
+
+            let isSuccess = false;
+            let targetXOffset = refXOffset;
+            let targetY = refY;
+
+            if (isPermissive && hasPassedValidDropZone.value) {
+                isSuccess = true;
+            } else if (index === 0) {
+                const groundDiffY = Math.abs(dropY - refY);
+                const groundDiffX = Math.abs(dropXOffset - refXOffset);
+                const horizontalTolerance = (level >= 7) ? 180 : 150;
+                if (groundDiffY < 120 && groundDiffX < horizontalTolerance) {
+                    isSuccess = true;
+                    targetXOffset = dropXOffset;
+                }
+            } else {
+                const distY = Math.abs(dropY - refY);
+                const distX = Math.abs(dropXOffset - refXOffset);
+                if (distY < 80 && distX < blockSize * 0.9) {
+                    isSuccess = true;
+                    targetXOffset = dropXOffset;
+                }
+            }
+
+            if (isSuccess) {
+                translateX.value = withSpring(targetXOffset);
+                translateY.value = withSpring(targetY);
+                rotation.value = withSpring(0);
+                runOnJS(onSuccess)(targetXOffset, targetY);
+            } else {
+                translateX.value = withSpring(width / 2 - blockSize / 2);
+                translateY.value = withSpring(SPAWN_BOTTOM);
+                rotation.value = withSpring(0);
+                runOnJS(onError)();
+            }
+        });
+
+    const animatedStyle = useAnimatedStyle(() => {
+        return {
+            left: animatedX.value,
+            bottom: translateY.value,
+            transform: [
+                { rotate: `${rotation.value}deg` },
+                { scale: scale.value }
+            ],
+            opacity: (isCurrent || isPlaced) ? 1 : 0
+        };
+    });
+
+    return (
+        <GestureDetector gesture={panGesture}>
+            <Animated.View
+                style={[
+                    styles.block,
+                    {
+                        width: blockSize,
+                        height: blockSize * 0.7,
+                        backgroundColor: color,
+                    },
+                    animatedStyle
+                ]}
+            >
+                {isCurrent && isHolding && (
+                    <View style={styles.holdIndicator}>
+                        <Text style={styles.holdText}>👆</Text>
+                    </View>
+                )}
+            </Animated.View>
+        </GestureDetector>
+    );
+}
+
+const styles = StyleSheet.create({
+    container: { flex: 1, backgroundColor: colors.bgPrimary },
+    header: { alignItems: 'center', paddingVertical: spacing.md },
+    subtitle: { fontSize: fontSize.sm, color: colors.textMuted, marginTop: 4 },
+    parentPromptContainer: {
+        position: 'absolute',
+        top: 20,
+        left: 0,
+        right: 0,
+        zIndex: 100,
+        marginHorizontal: spacing.lg,
+        backgroundColor: '#fef3c7',
+        padding: spacing.md,
+        borderRadius: borderRadius.lg,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.1,
+        shadowRadius: 10,
+        elevation: 10,
+        borderWidth: 1,
+        borderColor: '#fde68a'
+    },
+    parentPromptLabel: { fontSize: fontSize.xs, color: '#92400e', fontWeight: '600', marginBottom: 4 },
+    parentPromptText: { fontSize: fontSize.base, color: '#78350f', fontWeight: '500' },
+    gameArea: { flex: 1, position: 'relative' },
+    platform: { position: 'absolute', height: 30, backgroundColor: '#4ade80', borderRadius: 15, borderWidth: 3, borderColor: '#22c55e', justifyContent: 'center', alignItems: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 4, elevation: 6, zIndex: 10 },
+    platformText: { color: '#064e3b', fontSize: 10, fontWeight: '800', letterSpacing: 1 },
+    groundBase: { position: 'absolute', bottom: 0, left: 0, right: 0, height: PLATFORM_BOTTOM + 15, backgroundColor: '#f1f5f9', borderTopWidth: 4, borderTopColor: '#e2e8f0', zIndex: 1 },
+    block: { position: 'absolute', borderRadius: borderRadius.md, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.15, shadowRadius: 8, elevation: 5, zIndex: 20 },
+    holdIndicator: { position: 'absolute', top: -30, alignSelf: 'center' },
+    holdText: { fontSize: 24 },
+});

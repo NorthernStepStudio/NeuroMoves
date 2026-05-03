@@ -1,27 +1,33 @@
-
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import {
     View,
     Text,
     StyleSheet,
-    Animated,
     Dimensions,
     Pressable,
-    ViewStyle
 } from 'react-native';
+import Animated, {
+    useSharedValue,
+    useAnimatedStyle,
+    withSpring,
+    withTiming,
+    withDelay,
+    interpolate,
+    Extrapolation,
+    Easing as ReanimatedEasing,
+} from 'react-native-reanimated';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useGame } from '../core/GameContext';
 import { colors, spacing, borderRadius, fontSize, shadows } from '../theme/colors';
+import { useTranslation } from 'react-i18next';
 
-const { width } = Dimensions.get('window');
+const { width, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 interface GameHeaderProps {
     title: string;
     showLevel?: boolean;
     showScore?: boolean;
 }
-
-import { useTranslation } from 'react-i18next';
 
 /**
  * Game header component showing title, level, and score
@@ -119,12 +125,10 @@ export function GameInstruction({ text, subtext }: GameInstructionProps) {
     return (
         <View style={styles.instructionContainer}>
             <Text style={styles.instructionText}>{text}</Text>
-            {subtext && <Text style={styles.instructionSubtext}>{subtext}</Text>}
+            {subtext ? <Text style={styles.instructionSubtext}>{subtext}</Text> : null}
         </View>
     );
 }
-
-// ... (previous code)
 
 interface FeedbackOverlayProps {
     visible: boolean;
@@ -137,82 +141,53 @@ interface FeedbackOverlayProps {
     topOffset?: number;
 }
 
-import { Easing } from 'react-native';
-
-const { height: SCREEN_HEIGHT } = Dimensions.get('window');
-const UNIT = SCREEN_HEIGHT / 10;
 const CONFETTI_COLORS = ['#EF4444', '#3B82F6', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899'];
 
 function ConfettiParticle({ delay }: { delay: number }) {
-    const anim = React.useRef(new Animated.Value(0)).current;
+    const anim = useSharedValue(0);
+    const randomX = useRef(Math.random() * 400 - 200).current;
+    const rotation = useRef(Math.random() * 360).current;
+    const color = useRef(CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)]).current;
 
-    // Geometry: 3 Units UP, 10 Units DOWN (Scaled for visual comfort)
-    // Rise: 150px (3 units)
-    // Fall: 500px (10 units) from Peak
-    // Relative End Position: -Rise + Fall = -150 + 500 = +350.
-
-    const riseY = -150;
-    const endY = 350;
-
-    const randomX = React.useRef(Math.random() * 400 - 200).current;
-
-    // Varied rise slightly for natural look? No, user wants box accuracy.
-    // Let's keep strict vertical physics, maybe slight variance in angle is X.
-
-    const rotation = React.useRef(Math.random() * 360).current;
-    const color = React.useRef(CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)]).current;
-
-    React.useEffect(() => {
-        Animated.sequence([
-            Animated.delay(delay),
-            Animated.timing(anim, {
-                toValue: 1,
-                duration: 2000, // Speed up to ensure finish before level change (2500ms)
-                useNativeDriver: true,
-                easing: Easing.linear,
-            })
-        ]).start();
+    useEffect(() => {
+        anim.value = withDelay(delay, withTiming(1, { 
+            duration: 2000, 
+            easing: ReanimatedEasing.linear 
+        }));
     }, []);
 
-    // Physics Simulation via Interpolation
-    // Smoothing the peak to create a "Curved" arc with zero-velocity turn.
-    // By gradualizing the steps around the peak (0.3), we simulate gravity deceleration/acceleration.
-    const translateY = anim.interpolate({
-        inputRange: [0, 0.2, 0.25, 0.30, 0.35, 0.4, 1],
-        outputRange: [0, -110, -135, -150, -135, -110, 500]
-    });
+    const animatedStyle = useAnimatedStyle(() => {
+        const translateY = interpolate(
+            anim.value,
+            [0, 0.2, 0.25, 0.30, 0.35, 0.4, 1],
+            [0, -110, -135, -150, -135, -110, 500]
+        );
+        const translateX = interpolate(anim.value, [0, 1], [0, randomX]);
+        const rotateVal = interpolate(anim.value, [0, 1], [rotation, rotation + 720]);
 
-    const translateX = anim.interpolate({
-        inputRange: [0, 1],
-        outputRange: [0, randomX]
-    });
-
-    const rotate = anim.interpolate({
-        inputRange: [0, 1],
-        outputRange: [`${rotation}deg`, `${rotation + 720}deg`]
-    });
-
-    const opacity = anim.interpolate({
-        inputRange: [0, 1],
-        outputRange: [1, 1] // No fade out, stay valid until unmount
+        return {
+            transform: [
+                { translateX },
+                { translateY },
+                { rotate: `${rotateVal}deg` },
+                { rotateX: `${rotateVal}deg` },
+            ],
+            opacity: 1,
+        };
     });
 
     return (
         <Animated.View
-            style={{
-                position: 'absolute',
-                width: 10,
-                height: 10,
-                backgroundColor: color,
-                borderRadius: 2,
-                opacity,
-                transform: [
-                    { translateX },
-                    { translateY },
-                    { rotate },
-                    { rotateX: rotate }, // 3D tumble
-                ]
-            }}
+            style={[
+                {
+                    position: 'absolute',
+                    width: 10,
+                    height: 10,
+                    backgroundColor: color,
+                    borderRadius: 2,
+                },
+                animatedStyle
+            ]}
         />
     );
 }
@@ -226,58 +201,45 @@ export function FeedbackOverlay({
     position = 'center',
     confetti = false,
     transparent = false,
-    verticalPos, // Optional 0-1 float for vertical positioning (0 = Top, 1 = Bottom)
     topOffset,
-}: FeedbackOverlayProps & { transparent?: boolean, verticalPos?: number, topOffset?: number }) {
-    const opacity = React.useRef(new Animated.Value(0)).current;
-    const scale = React.useRef(new Animated.Value(0.8)).current;
+}: FeedbackOverlayProps & { transparent?: boolean, topOffset?: number }) {
+    const opacity = useSharedValue(0);
+    const scale = useSharedValue(0.8);
 
-    React.useEffect(() => {
+    useEffect(() => {
         if (visible) {
-            Animated.parallel([
-                Animated.timing(opacity, {
-                    toValue: 1,
-                    duration: 200,
-                    useNativeDriver: true,
-                }),
-                Animated.spring(scale, {
-                    toValue: 1,
-                    friction: 5,
-                    useNativeDriver: true,
-                }),
-            ]).start();
+            opacity.value = withTiming(1, { duration: 200 });
+            scale.value = withSpring(1, { damping: 15 });
         } else {
-            Animated.timing(opacity, {
-                toValue: 0,
-                duration: 150,
-                useNativeDriver: true,
-            }).start();
+            opacity.value = withTiming(0, { duration: 150 });
+            scale.value = withTiming(0.8, { duration: 150 });
         }
     }, [visible]);
 
     if (!visible) return null;
 
-    const bgColor = 'transparent';
-    // When transparent, use a visible text color (Accent Primary), otherwise White
-    // Use semantic colors for text when background is gone
     const textColor = type === 'success' ? colors.success : type === 'error' ? colors.error : colors.accentPrimary;
-
     const isTop = position === 'top';
     const isBottom = position === 'bottom';
 
-    // Custom vertical positioning style removed to honor Center alignment
+    const overlayStyle = useAnimatedStyle(() => ({
+        opacity: opacity.value,
+    }));
+
+    const contentStyle = useAnimatedStyle(() => ({
+        transform: [{ scale: scale.value }],
+    }));
 
     return (
         <Animated.View
             style={[
                 styles.feedbackOverlay,
-                { opacity, backgroundColor: compact ? 'transparent' : bgColor },
+                overlayStyle,
                 isTop && (topOffset !== undefined ? { paddingTop: topOffset, justifyContent: 'flex-start' } : styles.feedbackTop),
                 isBottom && styles.feedbackBottom,
             ]}
             pointerEvents="none"
         >
-            {/* Confetti Layer - Behind Content */}
             {confetti && type === 'success' && (
                 <View style={StyleSheet.absoluteFill} pointerEvents="none">
                     <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
@@ -292,19 +254,18 @@ export function FeedbackOverlay({
                 style={[
                     compact ? styles.compactContent : styles.centerContent,
                     (isTop || isBottom) && { flex: 0 },
-                    compact && { backgroundColor: bgColor },
-                    { transform: [{ scale }] }
+                    contentStyle
                 ]}
             >
-                {emoji && (
+                {emoji ? (
                     <Text style={[compact ? styles.compactEmoji : styles.feedbackEmoji, { color: textColor }]}>
                         {emoji}
                     </Text>
-                )}
+                ) : null}
                 <Text style={[
                     compact ? styles.compactMessage : styles.feedbackMessage,
                     { color: textColor },
-                    transparent && { textShadowColor: 'rgba(255,255,255,0.4)', textShadowRadius: 10 } // Subtle glow
+                    transparent && { textShadowColor: 'rgba(255,255,255,0.4)', textShadowRadius: 10 }
                 ]}>
                     {message}
                 </Text>
@@ -325,25 +286,22 @@ interface GameButtonProps {
 }
 
 export function GameButton({ title, onPress, variant = 'primary', disabled, icon }: GameButtonProps) {
-    const scaleAnim = React.useRef(new Animated.Value(1)).current;
+    const scale = useSharedValue(1);
 
     const handlePressIn = () => {
-        Animated.spring(scaleAnim, {
-            toValue: 0.95,
-            useNativeDriver: true,
-        }).start();
+        scale.value = withSpring(0.95);
     };
 
     const handlePressOut = () => {
-        Animated.spring(scaleAnim, {
-            toValue: 1,
-            friction: 3,
-            useNativeDriver: true,
-        }).start();
+        scale.value = withSpring(1, { damping: 10 });
     };
 
+    const animatedStyle = useAnimatedStyle(() => ({
+        transform: [{ scale: scale.value }],
+    }));
+
     return (
-        <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
+        <Animated.View style={animatedStyle}>
             <Pressable
                 style={[
                     styles.gameButton,
@@ -357,14 +315,14 @@ export function GameButton({ title, onPress, variant = 'primary', disabled, icon
                     if (!disabled) onPress();
                 }}
             >
-                {icon && (
+                {icon ? (
                     <MaterialCommunityIcons
                         name={icon as any}
                         size={20}
                         color={variant === 'secondary' ? colors.accentSecondary : '#fff'}
                         style={{ marginRight: spacing.xs }}
                     />
-                )}
+                ) : null}
                 <Text
                     style={[
                         styles.gameButtonText,

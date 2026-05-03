@@ -36,10 +36,7 @@ export function resolveApiBaseUrl(): string {
     );
   }
 
-  const fallback =
-    Platform.OS === 'android'
-      ? 'http://10.0.2.2:5000/api'
-      : 'http://localhost:5000/api';
+  const fallback = 'http://192.168.1.152:5000/api';
 
   return normalizeBaseUrl(fallback);
 }

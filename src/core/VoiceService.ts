@@ -38,7 +38,8 @@ export class VoiceService {
     private static speakId = 0;
     private static warmupController: AbortController | null = null;
 
-    static async stop() {
+    static async stop(onBusyChange?: (isBusy: boolean) => void, keepBusy = false) {
+        if (!keepBusy) onBusyChange?.(false);
         Speech.stop();
         if (this.currentVoice) {
             try {
@@ -114,11 +115,11 @@ export class VoiceService {
             this.warmupController = null;
         }
 
-        // Kill current audio
-        await this.stop();
+        // Kill current audio - but keep busy state if we are about to speak again
+        await this.stop(onBusyChange, options.shouldLock);
 
         // A. Static Asset Check (Animal sounds, etc)
-        const isShortCue = speechText.split(' ').length <= 2;
+        const isShortCue = speechText.split(' ').length <= 12;
         const asset = isShortCue ? getVoiceAsset(speechText) : null;
         if (asset) {
             if (mySpeakId !== this.speakId) return;
@@ -135,7 +136,9 @@ export class VoiceService {
                     }
                 });
                 return;
-            } catch (e) {}
+            } catch (e) {
+                if (options.shouldLock && mySpeakId === this.speakId) onBusyChange?.(false);
+            }
         }
 
         // B. Professional Backend
@@ -199,16 +202,23 @@ export class VoiceService {
         if (mySpeakId !== this.speakId || options.shouldOnlyCache) return;
         
         try {
+            // Normalize language for system TTS (e.g. en-US -> en)
+            const speechLang = currentLang.split('-')[0] || 'en';
+            
             Speech.speak(speechText, {
-                language: currentLang,
+                language: speechLang,
                 pitch: 1.0,
                 rate: 0.9,
                 volume,
                 onDone: () => { if (options.shouldLock && mySpeakId === this.speakId) onBusyChange?.(false); },
-                onError: () => { if (options.shouldLock && mySpeakId === this.speakId) onBusyChange?.(false); }
+                onError: (err) => { 
+                    console.error('[VoiceService] Speech.speak error:', err);
+                    if (options.shouldLock && mySpeakId === this.speakId) onBusyChange?.(false); 
+                }
             });
         } catch (err) {
-            if (options.shouldLock) onBusyChange?.(false);
+            console.error('[VoiceService] Fallback catch:', err);
+            if (options.shouldLock && mySpeakId === this.speakId) onBusyChange?.(false);
         }
     }
 }

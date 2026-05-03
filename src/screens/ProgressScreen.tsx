@@ -1,9 +1,5 @@
 import React, { useMemo, useState, useCallback } from 'react';
 import {
-  ActivityIndicator,
-  Alert,
-  Pressable,
-  Share,
   ScrollView,
   StyleSheet,
   Text,
@@ -20,25 +16,22 @@ import { borderRadius, colors, fontSize, shadows, spacing } from '../theme/color
 import { useAuth } from '../core/AuthContext';
 import { JournalEntry, loadJournalEntries } from '../core/journal';
 import { AchievementStatus, evaluateAndStoreAchievements } from '../core/achievements';
-import { exportProgressReport, shareProgressReportPdf } from '../services/ReportService';
 import { CompanionSyncService } from '../services/CompanionSyncService';
 import { useTranslation } from 'react-i18next';
 
 const CATEGORIES = [
   { key: 'motor', label: 'Motor Skills', color: '#22c55e' },
   { key: 'cognitive', label: 'Cognitive', color: '#3b82f6' },
-  { key: 'speech', label: 'Speech', color: '#a855f7' },
   { key: 'sensory', label: 'Sensory', color: '#f97316' },
 ];
 
 export default function ProgressScreen() {
-  const { selectedChild, parent } = useAuth();
+  const { selectedChild } = useAuth();
   const { t } = useTranslation();
   const [attempts, setAttempts] = useState<ActivityAttempt[]>([]);
   const [gameProgress, setGameProgress] = useState<Record<string, GameProgress>>({});
   const [journalEntries, setJournalEntries] = useState<JournalEntry[]>([]);
   const [achievements, setAchievements] = useState<AchievementStatus[]>([]);
-  const [exporting, setExporting] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -87,17 +80,14 @@ export default function ProgressScreen() {
         const activity = activityMap.get(attempt.activityId);
         const game = gameMap.get(attempt.activityId as any);
 
-        if (activity?.category === 'speech' || game?.category === 'speech') {
-          acc.speech += 1;
-        } else if (activity?.category === 'ot' || game) {
-          // All non-speech games roll up into OT practice totals.
+        if (activity?.category === 'ot' || game) {
           acc.ot += 1;
         }
 
         acc[attempt.result] += 1;
         return acc;
       },
-      { speech: 0, ot: 0, success: 0, tried: 0, skipped: 0 }
+      { ot: 0, success: 0, tried: 0, skipped: 0 }
     );
   }, [attempts]);
 
@@ -106,7 +96,7 @@ export default function ProgressScreen() {
   const unlockedAchievements = achievements.filter(item => item.unlocked);
 
   const categoryProgress = CATEGORIES.map(cat => {
-    const categoryGames = GAME_REGISTRY.filter(game => game.category === cat.key);
+    const categoryGames = GAME_REGISTRY.filter(game => game.category === cat.key && game.enabled);
     const totalLevels = categoryGames.reduce((sum, game) => sum + game.maxLevels, 0);
     const completedLevels = categoryGames.reduce((sum, game) => {
       const progress = gameProgress[game.id];
@@ -121,55 +111,6 @@ export default function ProgressScreen() {
     };
   });
 
-  const handleExportReport = async () => {
-    if (exporting) return;
-    try {
-      setExporting(true);
-      const report = await exportProgressReport({
-        childName: selectedChild?.name || 'Child',
-        childAgeMonths: selectedChild?.age_months,
-        parentEmail: parent?.email,
-        attempts,
-        gameProgress,
-        journalEntries,
-        achievements
-      });
-
-      const sharedPdf = await shareProgressReportPdf(report.uri);
-      const templateMessage = `Subject: ${report.emailTemplate.subject}\n\n${report.emailTemplate.body}`;
-
-      if (!sharedPdf) {
-        await Share.share({
-          title: report.emailTemplate.subject,
-          message: templateMessage
-        });
-        Alert.alert('PDF ready', `PDF generated at:\n${report.uri}`);
-        return;
-      }
-
-      Alert.alert(
-        'PDF shared',
-        'Share the pre-filled email text with your OT/SLP?',
-        [
-          { text: 'Not now', style: 'cancel' },
-          {
-            text: 'Share template',
-            onPress: () => {
-              void Share.share({
-                title: report.emailTemplate.subject,
-                message: templateMessage
-              });
-            }
-          }
-        ]
-      );
-    } catch (error: any) {
-      Alert.alert('Export failed', error?.message || 'Could not generate report.');
-    } finally {
-      setExporting(false);
-    }
-  };
-
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
       <ScrollView
@@ -181,20 +122,6 @@ export default function ProgressScreen() {
           <Text style={styles.headerTitle}>{t('progress.title', { defaultValue: 'Progress' })}</Text>
           <Text style={styles.headerSubtitle}>{t('progress.subtitle', { defaultValue: 'Track your child profile over time.' })}</Text>
         </View>
-
-        <Pressable
-          onPress={handleExportReport}
-          style={({ pressed }) => [styles.reportButton, pressed && { opacity: 0.9 }]}
-        >
-          {exporting ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <>
-              <Text style={styles.reportButtonTitle}>{t('progress.exportPdf', { defaultValue: 'Export PDF Report' })}</Text>
-              <Text style={styles.reportButtonSubtitle}>{t('progress.shareOt', { defaultValue: 'Share with OT/SLP' })}</Text>
-            </>
-          )}
-        </Pressable>
 
         <View style={styles.streakCard}>
           <View>
@@ -228,10 +155,6 @@ export default function ProgressScreen() {
           <View style={styles.statCard}>
             <Text style={styles.statValue}>{totals.tried}</Text>
             <Text style={styles.statLabel}>{t('progress.tried', { defaultValue: 'Tried' })}</Text>
-          </View>
-          <View style={styles.statCard}>
-            <Text style={styles.statValue}>{totals.speech}</Text>
-            <Text style={styles.statLabel}>{t('progress.speechAttempts', { defaultValue: 'Speech Attempts' })}</Text>
           </View>
           <View style={styles.statCard}>
             <Text style={styles.statValue}>{totals.ot}</Text>
@@ -331,23 +254,6 @@ const styles = StyleSheet.create({
   headerSubtitle: {
     color: colors.textSecondary,
     marginTop: 2
-  },
-  reportButton: {
-    backgroundColor: colors.accentPrimary,
-    borderRadius: borderRadius.lg,
-    padding: spacing.md,
-    marginBottom: spacing.lg,
-    ...shadows.button
-  },
-  reportButtonTitle: {
-    color: '#fff',
-    fontWeight: '700',
-    fontSize: fontSize.base
-  },
-  reportButtonSubtitle: {
-    color: 'rgba(255,255,255,0.9)',
-    marginTop: 2,
-    fontSize: fontSize.xs
   },
   streakCard: {
     backgroundColor: '#dbeafe',

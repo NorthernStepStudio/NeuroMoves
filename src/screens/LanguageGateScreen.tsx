@@ -33,7 +33,7 @@ export default function LanguageGateScreen({
   return (
     <LinearGradient colors={['#fff7ed', '#fafbfc']} style={styles.container}>
       <View style={styles.card}>
-        <Text style={styles.eyebrow}>NEUROMOVES</Text>
+        <Text style={styles.eyebrow}>NORTHERN STEP STUDIO</Text>
         <Text style={styles.title}>{t('languageGate.title')}</Text>
         <Text style={styles.subtitle}>{t('languageGate.subtitle')}</Text>
 

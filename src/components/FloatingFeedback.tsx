@@ -1,5 +1,11 @@
-import React, { useEffect, useRef } from 'react';
-import { Animated, StyleSheet, Text } from 'react-native';
+import React, { useEffect } from 'react';
+import { StyleSheet, Text } from 'react-native';
+import Animated, { 
+    useSharedValue, 
+    useAnimatedStyle, 
+    withTiming, 
+    runOnJS 
+} from 'react-native-reanimated';
 
 interface FloatingFeedbackProps {
     text: string;
@@ -16,23 +22,22 @@ export const FloatingFeedback: React.FC<FloatingFeedbackProps> = ({
     onComplete,
     color = '#00f2ff'
 }) => {
-    const floatAnim = useRef(new Animated.Value(0)).current;
-    const opacityAnim = useRef(new Animated.Value(1)).current;
+    const float = useSharedValue(0);
+    const opacity = useSharedValue(1);
 
     useEffect(() => {
-        Animated.parallel([
-            Animated.timing(floatAnim, {
-                toValue: -100,
-                duration: 1000,
-                useNativeDriver: true,
-            }),
-            Animated.timing(opacityAnim, {
-                toValue: 0,
-                duration: 1000,
-                useNativeDriver: true,
-            })
-        ]).start(() => onComplete());
+        float.value = withTiming(-100, { duration: 1000 });
+        opacity.value = withTiming(0, { duration: 1000 }, (finished) => {
+            if (finished) runOnJS(onComplete)();
+        });
     }, []);
+
+    const animatedStyle = useAnimatedStyle(() => {
+        return {
+            opacity: opacity.value,
+            transform: [{ translateY: float.value }],
+        };
+    });
 
     return (
         <Animated.View
@@ -41,9 +46,8 @@ export const FloatingFeedback: React.FC<FloatingFeedbackProps> = ({
                 {
                     left: x,
                     top: y,
-                    opacity: opacityAnim,
-                    transform: [{ translateY: floatAnim }],
-                }
+                },
+                animatedStyle
             ]}
         >
             <Text style={[styles.text, { color, textShadowColor: color }]}>

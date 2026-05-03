@@ -99,9 +99,6 @@
         "milestones": "Milestone stickers",
         "avatarStudio": "Avatar Studio",
         "customize": "Customize companion",
-        "responseOs": "ResponseOS Plan Export",
-        "generatePlan": "Generate + save + export a daily plan",
-        "generatingPlan": "Generating and saving your plan...",
         "continue": "Continue",
         "play": "Play",
         "pro": "Pro",
@@ -111,7 +108,6 @@
         "skillProgress": "Skill Progress",
         "recentActivity": "Recent Activity",
         "levelReached": "Level {{level}} reached",
-        "dailyPractice": "Daily Practice",
         "start": "Start",
         "exploreAll": "Explore All Activities"
     },
@@ -124,12 +120,25 @@
     "colorMatch": {
         "title": "Color Match",
         "findText": "Find the matching color",
-        "instruction": "Find the color {{color}}",
-        "successMessage": "You got it!",
+        "instruction": "Find the {{color}} color",
+        "successMessage": "Great job!",
         "tryAgain": "Try again!",
         "hintText": "Match the colors",
         "level": "Level",
-        "colors": "Colors"
+        "colors_plural": "colors",
+        "voiceLabels": {
+            "red": "red",
+            "blue": "blue",
+            "green": "green",
+            "yellow": "yellow",
+            "purple": "purple",
+            "orange": "orange",
+            "pink": "pink",
+            "cyan": "cyan",
+            "lime": "lime",
+            "teal": "teal",
+            "brown": "brown"
+        }
     },
     "pointItOut": {
         "title": "Point It Out",
@@ -162,6 +171,13 @@
     "sizeOrdering": {
         "title": "Size Ordering",
         "instruction": "Arrange by size"
+    },
+    "animalMatch": {
+        "title": "Animal Match",
+        "instruction": "Match the animals",
+        "greatJob": "Great job!",
+        "done": "Done",
+        "playAgain": "Play Again"
     },
     "letterRecognition": {
         "title": "Letter Recognition",
@@ -233,6 +249,10 @@
         "number-recognition": {
             "title": "Number Recognition",
             "description": "Find the matching number"
+        },
+        "animal-match": {
+            "title": "Animal Match",
+            "description": "Match animals to their shapes"
         }
     },
     "game": {
@@ -274,8 +294,8 @@
         "tactile": "Tactile Strength",
         "intensity": "intensity",
         "about": "About",
-        "aboutApp": "About NeuroMoves",
-        "aboutSub": "Who we are and our mission",
+        "aboutApp": "About Northern Step Studio",
+        "aboutSub": "Our mission and studio story",
         "guide": "Activity Guide",
         "guideSub": "What each game helps develop",
         "contact": "Contact Support",
@@ -290,8 +310,6 @@
         "dataManagement": "Data Management",
         "resetProgress": "Reset All Progress",
         "resetSub": "Clear all activity and game history",
-        "exportData": "Export My Data",
-        "exportSub": "Download all your data as JSON",
         "deleteAccount": "Delete Account",
         "deleteSub": "Permanently remove account and all data",
         "logout": "Log Out",
@@ -300,13 +318,11 @@
         "logoutPromptMessage": "Do you want to sign out?",
         "logoutConfirm": "Log Out",
         "cancel": "Cancel",
-        "footer": "Made with ❤️ for parents and children"
+        "footer": "Created by Northern Step Studio"
     },
     "progress": {
         "title": "Progress",
         "subtitle": "Track your child profile over time.",
-        "exportPdf": "Export PDF Report",
-        "shareOt": "Share with OT/SLP",
         "dayStreak": "Day Streak",
         "startToday": "Start today.",
         "greatConsistency": "Great consistency.",
@@ -317,7 +333,6 @@
         "successRate": "Success Rate",
         "successes": "Successes",
         "tried": "Tried",
-        "speechAttempts": "Speech Attempts",
         "otAttempts": "OT Attempts",
         "skillProgress": "Skill Progress",
         "levels": "levels",

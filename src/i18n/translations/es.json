@@ -99,9 +99,6 @@
         "milestones": "Hitos alcanzados",
         "avatarStudio": "Estudio de Avatar",
         "customize": "Personaliza tu avatar",
-        "responseOs": "Plan ResponseOS",
-        "generatePlan": "Genera + guarda + exporta tu plan diario",
-        "generatingPlan": "Generando y guardando tu plan...",
         "continue": "Continuar",
         "play": "Jugar",
         "pro": "Pro",
@@ -111,7 +108,6 @@
         "skillProgress": "Progreso de Habilidades",
         "recentActivity": "Actividad Reciente",
         "levelReached": "Nivel {{level}} alcanzado",
-        "dailyPractice": "Práctica Diaria",
         "start": "Comenzar",
         "exploreAll": "Explorar Todas las Actividades"
     },
@@ -129,7 +125,20 @@
         "tryAgain": "¡Inténtalo de nuevo!",
         "hintText": "Une los colores",
         "level": "Nivel",
-        "colors": "Colores"
+        "colors_plural": "colores",
+        "voiceLabels": {
+            "red": "rojo",
+            "blue": "azul",
+            "green": "verde",
+            "yellow": "amarillo",
+            "purple": "púrpura",
+            "orange": "naranja",
+            "pink": "rosa",
+            "cyan": "cian",
+            "lime": "lima",
+            "teal": "verde azulado",
+            "brown": "marrón"
+        }
     },
     "pointItOut": {
         "title": "Señálalo",
@@ -162,6 +171,13 @@
     "sizeOrdering": {
         "title": "Ordenar por Tamaño",
         "instruction": "Ordena por tamaño"
+    },
+    "animalMatch": {
+        "title": "Emparejar Animales",
+        "instruction": "Empareja los animales",
+        "greatJob": "¡Buen trabajo!",
+        "done": "Hecho",
+        "playAgain": "Jugar de nuevo"
     },
     "letterRecognition": {
         "title": "Reconocer Letras",
@@ -233,6 +249,10 @@
         "number-recognition": {
             "title": "Números",
             "description": "Encuentra el número"
+        },
+        "animal-match": {
+            "title": "Animales",
+            "description": "Combina los animales con sus formas"
         }
     },
     "game": {
@@ -274,8 +294,8 @@
         "tactile": "Fuerza de la Vibración",
         "intensity": "intensidad",
         "about": "Acerca de",
-        "aboutApp": "Acerca de NeuroMoves",
-        "aboutSub": "Quiénes somos y nuestra misión",
+        "aboutApp": "Acerca de Northern Step Studio",
+        "aboutSub": "Nuestra misión e historia del estudio",
         "guide": "Guía de Actividades",
         "guideSub": "Qué área desarrolla cada juego",
         "contact": "Soporte",
@@ -290,8 +310,6 @@
         "dataManagement": "Información",
         "resetProgress": "Borrar Todo el Progreso",
         "resetSub": "Borra la historia de juegos",
-        "exportData": "Exportar Información",
-        "exportSub": "Descarga toda la información como JSON",
         "deleteAccount": "Borrar Cuenta",
         "deleteSub": "Elimina permanentemente tu cuenta y data",
         "logout": "Cerrar Sesión",
@@ -300,13 +318,11 @@
         "logoutPromptMessage": "¿Quieres cerrar la sesión?",
         "logoutConfirm": "Cerrar Sesión",
         "cancel": "Cancelar",
-        "footer": "Hecho con ❤️ para padres e hijos"
+        "footer": "Creado por Northern Step Studio"
     },
     "progress": {
         "title": "Progreso",
         "subtitle": "Rastrea el perfil de tu hijo en el tiempo.",
-        "exportPdf": "Exportar Reporte PDF",
-        "shareOt": "Comparte con el Terapeuta",
         "dayStreak": "Racha",
         "startToday": "Empieza hoy.",
         "greatConsistency": "Gran consistencia.",
@@ -317,7 +333,6 @@
         "successRate": "% Éxito",
         "successes": "Éxitos",
         "tried": "Intentos",
-        "speechAttempts": "Intentos Habla",
         "otAttempts": "Intentos Motricidad",
         "skillProgress": "Progreso de Habilidades",
         "levels": "niveles",

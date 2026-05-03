@@ -99,9 +99,6 @@
         "milestones": "Traguardi raggiunti",
         "avatarStudio": "Studio Avatar",
         "customize": "Personalizza il tuo avatar",
-        "responseOs": "Piano ResponseOS",
-        "generatePlan": "Genera + salva + esporta un piano giornaliero",
-        "generatingPlan": "Generazione e salvataggio del piano...",
         "continue": "Continua",
         "play": "Gioca",
         "pro": "Pro",
@@ -111,7 +108,6 @@
         "skillProgress": "Progresso Abilità",
         "recentActivity": "Attività Recente",
         "levelReached": "Livello {{level}} raggiunto",
-        "dailyPractice": "Pratica Quotidiana",
         "start": "Inizia",
         "exploreAll": "Esplora Tutte le Attività"
     },
@@ -129,7 +125,20 @@
         "tryAgain": "Riprova!",
         "hintText": "Abbina i colori",
         "level": "Livello",
-        "colors": "Colori"
+        "colors_plural": "colori",
+        "voiceLabels": {
+            "red": "rosso",
+            "blue": "blu",
+            "green": "verde",
+            "yellow": "giallo",
+            "purple": "viola",
+            "orange": "arancione",
+            "pink": "rosa",
+            "cyan": "ciano",
+            "lime": "lime",
+            "teal": "verde acqua",
+            "brown": "marrone"
+        }
     },
     "pointItOut": {
         "title": "Trovalo",
@@ -162,6 +171,13 @@
     "sizeOrdering": {
         "title": "Ordina per Dimensione",
         "instruction": "Ordina per dimensione"
+    },
+    "animalMatch": {
+        "title": "Abbina Animali",
+        "instruction": "Abbina gli animali",
+        "greatJob": "Ottimo lavoro!",
+        "done": "Fatto",
+        "playAgain": "Gioca ancora"
     },
     "letterRecognition": {
         "title": "Riconoscimento Lettere",
@@ -233,6 +249,10 @@
         "number-recognition": {
             "title": "Numeri",
             "description": "Trova il numero"
+        },
+        "animal-match": {
+            "title": "Animali",
+            "description": "Abbina gli animali alle loro forme"
         }
     },
     "game": {
@@ -274,8 +294,8 @@
         "tactile": "Forza Vibrazione",
         "intensity": "intensità",
         "about": "Info",
-        "aboutApp": "Info su NeuroMoves",
-        "aboutSub": "Chi siamo",
+        "aboutApp": "Info su Northern Step Studio",
+        "aboutSub": "Missione e storia dello studio",
         "guide": "Guida Attività",
         "guideSub": "A cosa serve ogni gioco",
         "contact": "Supporto",
@@ -290,8 +310,6 @@
         "dataManagement": "Dati",
         "resetProgress": "Cancella Progressi",
         "resetSub": "Rimuovi tutta la cronologia",
-        "exportData": "Esporta Dati",
-        "exportSub": "Scarica un file JSON dei tuoi dati",
         "deleteAccount": "Elimina Account",
         "deleteSub": "Elimina permanentemente l'account",
         "logout": "Esci",
@@ -300,13 +318,11 @@
         "logoutPromptMessage": "Vuoi uscire?",
         "logoutConfirm": "Esci",
         "cancel": "Annulla",
-        "footer": "Fatto con ❤️ per genitori e bambini"
+        "footer": "Creato da Northern Step Studio"
     },
     "progress": {
         "title": "Progresso",
         "subtitle": "Segui lo sviluppo del bambino.",
-        "exportPdf": "Esporta PDF",
-        "shareOt": "Condividi col terapeuta",
         "dayStreak": "Giorni di fila",
         "startToday": "Inizia oggi.",
         "greatConsistency": "Costanza ottima.",
@@ -317,7 +333,6 @@
         "successRate": "% Successo",
         "successes": "Successi",
         "tried": "Tentati",
-        "speechAttempts": "Tentativi Parola",
         "otAttempts": "Tentativi Motori",
         "skillProgress": "Progresso Abilità",
         "levels": "livelli",

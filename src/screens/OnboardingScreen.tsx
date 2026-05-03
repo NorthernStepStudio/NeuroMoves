@@ -28,7 +28,6 @@ const LANGUAGE_OPTIONS = [
 
 const FOCUS_OPTIONS: Array<{ value: DevelopmentFocus; label: string; subtitle: string }> = [
   { value: 'motor', label: 'Motor Skills', subtitle: 'Fine and gross motor coordination' },
-  { value: 'speech', label: 'Speech', subtitle: 'Early language and communication' },
   { value: 'cognitive', label: 'Cognitive', subtitle: 'Memory, matching, and problem-solving' },
   { value: 'sensory', label: 'Sensory', subtitle: 'Sound and sensory engagement' }
 ];

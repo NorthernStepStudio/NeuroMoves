@@ -2,66 +2,6 @@ import { Activity } from '../core/types';
 
 export const ACTIVITIES: Activity[] = [
   {
-    id: 'speech-sounds-ma',
-    title: 'Sound Imitation: ma',
-    description: 'Practice the ma sound together.',
-    category: 'speech',
-    type: 'speech',
-    durationMinutes: 3,
-    prompts: [
-      'Say "ma" slowly and clearly.',
-      'Pause and wait for your child to try.',
-      'Repeat two times with a smile.'
-    ],
-    tips: ['Keep your face close and friendly.', 'Celebrate any attempt.'],
-    benefits: ['Builds early sound awareness.', 'Encourages first syllables.']
-  },
-  {
-    id: 'speech-sounds-ba',
-    title: 'Sound Imitation: ba',
-    description: 'Practice the ba sound with a toy.',
-    category: 'speech',
-    type: 'speech',
-    durationMinutes: 3,
-    prompts: [
-      'Hold a favorite toy and say "ba".',
-      'Invite your child to copy the sound.',
-      'Repeat slowly three times.'
-    ],
-    tips: ['Use gentle eye contact.', 'Let your child lead the pace.'],
-    benefits: ['Supports lip closure control.', 'Reinforces sound copying.']
-  },
-  {
-    id: 'speech-first-words',
-    title: 'First Words',
-    description: 'Choose a familiar word and repeat it.',
-    category: 'speech',
-    type: 'speech',
-    durationMinutes: 4,
-    prompts: [
-      'Pick one word like "ball" or "up".',
-      'Say it clearly and pause.',
-      'Repeat it as you play.'
-    ],
-    tips: ['Stay consistent with one word.', 'Short sessions are best.'],
-    benefits: ['Builds word understanding.', 'Links words to actions.']
-  },
-  {
-    id: 'speech-repeat',
-    title: 'Simple Repetition',
-    description: 'Repeat a short phrase together.',
-    category: 'speech',
-    type: 'speech',
-    durationMinutes: 4,
-    prompts: [
-      'Say a two word phrase like "more milk".',
-      'Pause and invite imitation.',
-      'Repeat with a soft rhythm.'
-    ],
-    tips: ['Use a calm voice.', 'Praise any attempt.'],
-    benefits: ['Encourages combining words.', 'Builds listening stamina.']
-  },
-  {
     id: 'ot-tap-targets',
     title: 'Tap Targets',
     description: 'Tap the glowing targets.',

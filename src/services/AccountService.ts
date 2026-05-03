@@ -252,7 +252,7 @@ export class AccountService {
 
   static async listChildren(token: string): Promise<ChildProfile[]> {
     if (isMockToken(token)) {
-      return [{ id: 101, name: 'Sammy (Mock', language: 'en', age_months: 36 }];
+      return [{ id: 101, name: 'Sammy (Mock)', language: 'en', age_months: 36 }];
     }
     const response = await fetch(`${API_BASE_URL}/children`, {
       method: 'GET',

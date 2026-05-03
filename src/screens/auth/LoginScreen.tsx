@@ -52,7 +52,22 @@ export default function LoginScreen() {
     };
   }, [isExpoGo]);
 
-  const [googleRequest, googleResponse, promptGoogleAuth] = Google.useIdTokenAuthRequest(googleAuthConfig);
+  let googleRequest: any = null;
+  let googleResponse: any = null;
+  let promptGoogleAuth: ((options?: AuthSession.AuthRequestPromptOptions) => Promise<AuthSession.AuthSessionResult>) | null = null;
+  try {
+    // The Google hook throws if a required client id isn't provided on web.
+    // Wrap in try/catch so the app doesn't crash when env vars are missing.
+    // If it throws, we'll fallback to stubs below and disable the Google flow.
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    [googleRequest, googleResponse, promptGoogleAuth] = Google.useIdTokenAuthRequest(googleAuthConfig as any);
+  } catch (e) {
+    // Hook failed (likely missing webClientId). Leave stubs null and handle gracefully.
+    // We don't set an error here; the UI will disable the Google button and show a helpful message when pressed.
+    googleRequest = null;
+    googleResponse = null;
+    promptGoogleAuth = null;
+  }
 
   const googleConfigured = useMemo(() => {
     if (isExpoGo) {
@@ -113,7 +128,7 @@ export default function LoginScreen() {
   };
 
   const handleGoogle = async () => {
-    if (!googleConfigured || !googleRequest) {
+    if (!googleConfigured || !googleRequest || !promptGoogleAuth) {
       setError(
         isExpoGo
           ? 'Google sign-in in Expo Go requires a web/expo client ID and authorized redirect URI.'

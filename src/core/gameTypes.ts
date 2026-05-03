@@ -7,7 +7,6 @@ export type GameId =
     | 'point-it-out'
     | 'stacking'
     | 'shape-sorting'
-    | 'baby-signs'
     | 'magic-fingers'
     | 'emotions'
     | 'body-parts'
@@ -16,7 +15,8 @@ export type GameId =
     | 'tracing'
     | 'number-tracing'
     | 'letter-recognition'
-    | 'number-recognition';
+    | 'number-recognition'
+    | 'animal-match';
 
 export interface GameConfig {
     id: GameId;
@@ -24,7 +24,10 @@ export interface GameConfig {
     description: string;
     icon: string;
     maxLevels: number;
-    category: 'motor' | 'cognitive' | 'speech' | 'sensory';
+    category: 'motor' | 'cognitive' | 'sensory';
+    enabled: boolean;
+    status: 'active' | 'disabled';
+    reason?: string;
 }
 
 export interface GameProgress {
@@ -71,6 +74,8 @@ export const GAME_REGISTRY: GameConfig[] = [
         icon: '🎨',
         maxLevels: 10,
         category: 'cognitive',
+        enabled: true,
+        status: 'active'
     },
     {
         id: 'yes-no',
@@ -79,6 +84,8 @@ export const GAME_REGISTRY: GameConfig[] = [
         icon: '👍',
         maxLevels: 10,
         category: 'cognitive',
+        enabled: true,
+        status: 'active'
     },
     {
         id: 'pop-bubbles',
@@ -87,8 +94,9 @@ export const GAME_REGISTRY: GameConfig[] = [
         icon: '🫧',
         maxLevels: 10,
         category: 'motor',
+        enabled: true,
+        status: 'active'
     },
-
     {
         id: 'point-it-out',
         title: 'Point It Out',
@@ -96,6 +104,8 @@ export const GAME_REGISTRY: GameConfig[] = [
         icon: '🔍',
         maxLevels: 10,
         category: 'cognitive',
+        enabled: true,
+        status: 'active'
     },
     {
         id: 'stacking',
@@ -104,6 +114,8 @@ export const GAME_REGISTRY: GameConfig[] = [
         icon: '🧱',
         maxLevels: 10,
         category: 'motor',
+        enabled: true,
+        status: 'active'
     },
     {
         id: 'shape-sorting',
@@ -112,25 +124,20 @@ export const GAME_REGISTRY: GameConfig[] = [
         icon: '🔷',
         maxLevels: 10,
         category: 'cognitive',
+        enabled: true,
+        status: 'active'
     },
     {
-        id: 'baby-signs',
-        title: 'Baby Signs',
-        description: 'Learn sign language basics',
-        icon: '🤟',
-        maxLevels: 5,
-        category: 'speech',
+        id: 'magic-fingers',
+        title: 'Magic Fingers',
+        description: 'Finger isolation exercises',
+        icon: '🖐️',
+        maxLevels: 10,
+        category: 'motor',
+        enabled: false,
+        status: 'disabled',
+        reason: 'Temporarily disabled until mechanics are complete'
     },
-    /*
-        {
-            id: 'magic-fingers',
-            title: 'Magic Fingers',
-            description: 'Finger isolation exercises',
-            icon: '🖐️',
-            maxLevels: 10,
-            category: 'motor',
-        },
-    */
     {
         id: 'emotions',
         title: 'Emotions',
@@ -138,17 +145,20 @@ export const GAME_REGISTRY: GameConfig[] = [
         icon: '😊',
         maxLevels: 10,
         category: 'cognitive',
+        enabled: true,
+        status: 'active'
     },
-    /*
-        {
-            id: 'body-parts',
-            title: 'Body Parts',
-            description: 'Touch the named body part',
-            icon: '🧍',
-            maxLevels: 10,
-            category: 'cognitive',
-        },
-    */
+    {
+        id: 'body-parts',
+        title: 'Body Parts',
+        description: 'Touch the named body part',
+        icon: '🧍',
+        maxLevels: 10,
+        category: 'cognitive',
+        enabled: false,
+        status: 'disabled',
+        reason: 'Temporarily disabled until mechanics are complete'
+    },
     {
         id: 'animal-sounds',
         title: 'Animal Sounds',
@@ -156,6 +166,8 @@ export const GAME_REGISTRY: GameConfig[] = [
         icon: '🐶',
         maxLevels: 10,
         category: 'sensory',
+        enabled: true,
+        status: 'active'
     },
     {
         id: 'size-ordering',
@@ -164,6 +176,8 @@ export const GAME_REGISTRY: GameConfig[] = [
         icon: '📏',
         maxLevels: 10,
         category: 'cognitive',
+        enabled: true,
+        status: 'active'
     },
     {
         id: 'tracing',
@@ -172,6 +186,8 @@ export const GAME_REGISTRY: GameConfig[] = [
         icon: '✏️',
         maxLevels: 26,
         category: 'motor',
+        enabled: true,
+        status: 'active'
     },
     {
         id: 'number-tracing',
@@ -180,6 +196,8 @@ export const GAME_REGISTRY: GameConfig[] = [
         icon: '1️⃣',
         maxLevels: 10,
         category: 'motor',
+        enabled: true,
+        status: 'active'
     },
     {
         id: 'letter-recognition',
@@ -188,6 +206,8 @@ export const GAME_REGISTRY: GameConfig[] = [
         icon: '🔤',
         maxLevels: 26,
         category: 'cognitive',
+        enabled: true,
+        status: 'active'
     },
     {
         id: 'number-recognition',
@@ -196,6 +216,18 @@ export const GAME_REGISTRY: GameConfig[] = [
         icon: '🔢',
         maxLevels: 10,
         category: 'cognitive',
+        enabled: true,
+        status: 'active'
+    },
+    {
+        id: 'animal-match',
+        title: 'Animal Match',
+        description: 'Match animals to their shapes',
+        icon: '🐄',
+        maxLevels: 1,
+        category: 'cognitive',
+        enabled: true,
+        status: 'active'
     },
 ];
 
@@ -208,7 +240,6 @@ export const GAME_SCREEN_MAP: Record<GameId, string> = {
     'point-it-out': 'PointItOutGame',
     'stacking': 'StackingGame',
     'shape-sorting': 'ShapeSortingGame',
-    'baby-signs': 'BabySignsGame',
     'magic-fingers': 'MagicFingersGame',
     'emotions': 'EmotionsGame',
     'body-parts': 'BodyPartsGame',
@@ -218,4 +249,5 @@ export const GAME_SCREEN_MAP: Record<GameId, string> = {
     'number-tracing': 'NumberTracingGame',
     'letter-recognition': 'LetterRecognitionGame',
     'number-recognition': 'NumberRecognitionGame',
+    'animal-match': 'AnimalMatchGame',
 };

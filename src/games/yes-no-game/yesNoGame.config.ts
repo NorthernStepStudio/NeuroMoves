@@ -1,0 +1,61 @@
+import { Question } from "./yesNoGame.types";
+
+export const QUESTIONS: Question[][] = [
+  [
+    { text: "Is this an apple?", answer: "yes", color: "#ef4444", emoji: "🍎" },
+    { text: "Is this a dog?", answer: "yes", color: "#78350f", emoji: "🐶" },
+    { text: "Is this a car?", answer: "yes", color: "#dc2626", emoji: "🚗" },
+    { text: "Is this a fish?", answer: "yes", color: "#3b82f6", emoji: "🐟" },
+    { text: "Is this an apple?", answer: "no", color: "#eab308", emoji: "🍌" },
+    { text: "Is this an apple?", answer: "no", color: "#dc2626", emoji: "🚗" },
+    { text: "Is this a dog?", answer: "no", color: "#f97316", emoji: "🐱" },
+    { text: "Is this a dog?", answer: "no", color: "#16a34a", emoji: "🐢" },
+    { text: "Is this a car?", answer: "no", color: "#78350f", emoji: "🐶" },
+    { text: "Is this a car?", answer: "no", color: "#3b82f6", emoji: "🐟" },
+    { text: "Is this a fish?", answer: "no", color: "#0ea5e9", emoji: "🐦" },
+    { text: "Is this a fish?", answer: "no", color: "#16a34a", emoji: "🐍" },
+    { text: "Is this a bird?", answer: "no", color: "#16a34a", emoji: "🐢" },
+    { text: "Is this a bird?", answer: "yes", color: "#0ea5e9", emoji: "🐦" },
+    { text: "Is this a cat?", answer: "no", color: "#eab308", emoji: "🍌" },
+    { text: "Is this a cat?", answer: "yes", color: "#f97316", emoji: "🐱" },
+  ],
+  [
+    {
+      text: "Is the sun yellow?",
+      answer: "yes",
+      color: "#eab308",
+      emoji: "☀️",
+    },
+    {
+      text: "Is the grass green?",
+      answer: "yes",
+      color: "#22c55e",
+      emoji: "🌿",
+    },
+    { text: "Is the sky blue?", answer: "yes", color: "#3b82f6", emoji: "☁️" },
+    {
+      text: "Is a strawberry red?",
+      answer: "yes",
+      color: "#ef4444",
+      emoji: "🍓",
+    },
+    { text: "Is a lemon purple?", answer: "no", color: "#a855f7", emoji: "🍋" },
+    { text: "Is snow black?", answer: "no", color: "#000000", emoji: "❄️" },
+  ],
+  [
+    { text: "Do cats meow?", answer: "yes", color: "#f97316", emoji: "🐱" },
+    { text: "Do birds fly?", answer: "yes", color: "#0ea5e9", emoji: "🐦" },
+    { text: "Do fish walk?", answer: "no", color: "#3b82f6", emoji: "🐟" },
+    { text: "Do dogs quack?", answer: "no", color: "#78350f", emoji: "🐶" },
+    { text: "Do cows moo?", answer: "yes", color: "#1f2937", emoji: "🐮" },
+    { text: "Do snakes run?", answer: "no", color: "#16a34a", emoji: "🐍" },
+  ],
+  [
+    { text: "Is ice cold?", answer: "yes", color: "#0ea5e9", emoji: "🧊" },
+    { text: "Is fire hot?", answer: "yes", color: "#ef4444", emoji: "🔥" },
+    { text: "Is a rock soft?", answer: "no", color: "#57534e", emoji: "🪨" },
+    { text: "Is candy sweet?", answer: "yes", color: "#ec4899", emoji: "🍬" },
+    { text: "Do clean cars fly?", answer: "no", color: "#2563eb", emoji: "🚗" },
+    { text: "Is rain dry?", answer: "no", color: "#3b82f6", emoji: "🌧️" },
+  ],
+];

@@ -119,6 +119,27 @@ export const theme = {
       shadowRadius: 3,
       elevation: 1
     },
+    md: {
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.06,
+      shadowRadius: 12,
+      elevation: 3
+    },
+    lg: {
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 8 },
+      shadowOpacity: 0.1,
+      shadowRadius: 20,
+      elevation: 6
+    },
+    xl: {
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 12 },
+      shadowOpacity: 0.15,
+      shadowRadius: 24,
+      elevation: 10
+    },
     card: {
       shadowColor: '#000',
       shadowOffset: { width: 0, height: 4 },

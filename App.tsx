@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
 import { useFonts } from 'expo-font';
@@ -30,8 +31,8 @@ export default function App() {
   const [selectedLanguage, setSelectedLanguage] = useState<LanguageCode>('en');
 
   useEffect(() => {
-    // Initialize RevenueCat early
-    SubscriptionService.init();
+    // Subscription layer boots in local-unlocked mode for this build.
+    SubscriptionService.init().catch(() => undefined);
 
     if (!fontsLoaded) {
       return;
@@ -69,23 +70,23 @@ export default function App() {
     return null;
   }
 
-  if (showLanguageGate) {
-    return (
-      <LanguageGateScreen
-        selectedLanguage={selectedLanguage}
-        onSelectLanguage={handleLanguageSelect}
-      />
-    );
-  }
-
   return (
-    <SafeAreaProvider>
-      <I18nextProvider i18n={i18n}>
-        <StatusBar style="dark" />
-        <AuthProvider>
-          <AppNavigator />
-        </AuthProvider>
-      </I18nextProvider>
-    </SafeAreaProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaProvider>
+        <I18nextProvider i18n={i18n}>
+          <StatusBar style="dark" />
+          <AuthProvider>
+            {showLanguageGate ? (
+              <LanguageGateScreen
+                selectedLanguage={selectedLanguage}
+                onSelectLanguage={handleLanguageSelect}
+              />
+            ) : (
+              <AppNavigator />
+            )}
+          </AuthProvider>
+        </I18nextProvider>
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 }

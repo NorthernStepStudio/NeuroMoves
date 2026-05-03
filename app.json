@@ -6,7 +6,7 @@
     "scheme": "neuromoves",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/logo.png",
+    "icon": "./assets/logo-square.png",
     "userInterfaceStyle": "dark",
     "splash": {
       "image": "./assets/logo.png",
@@ -51,7 +51,9 @@
           "resizeMode": "contain",
           "backgroundColor": "#020235"
         }
-      ]
+      ],
+      "expo-localization",
+      "expo-web-browser"
     ],
     "extra": {
       "eas": {
