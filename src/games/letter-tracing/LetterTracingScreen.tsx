@@ -177,7 +177,7 @@ export default function LetterTracingScreen() {
                   key={`cp-${idx}`}
                   cx={cp.point.x + OFFSET}
                   cy={cp.point.y + OFFSET}
-                  r={4}
+                  r={12}
                   fill={cp.visited ? FILL_COLOR : "#CBD5E1"}
                   opacity={cp.visited ? 1 : 0.4}
                 />
@@ -195,18 +195,7 @@ export default function LetterTracingScreen() {
                 />
               )}
 
-              {/* The player's drawn path */}
-              {currentPath !== "" && (
-                <Path
-                  d={currentPath}
-                  stroke={FILL_COLOR}
-                  strokeWidth={TRACE_WIDTH}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  fill="none"
-                  clipPath="url(#traceClip)"
-                />
-              )}
+              {/* The player's drawn path (liner tracing removed by request) */}
             </G>
           </Svg>
         </View>

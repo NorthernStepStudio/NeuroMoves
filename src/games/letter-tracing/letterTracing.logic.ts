@@ -87,10 +87,8 @@ export function useLetterTracingGame(
       }));
 
       stopLetterTracingTTS().then(() => {
-        const prompt = t("tracing.instruction", {
-          letter: letterCase === "lower" ? g.char.toLowerCase() : g.char,
-        });
-        speakLetterTracingPrompt(prompt);
+        const letter = letterCase === "lower" ? g.char.toLowerCase() : g.char;
+        speakLetterTracingPrompt(letter);
       });
     },
     [guides, canvasSize, letterCase, t],
@@ -147,7 +145,7 @@ export function useLetterTracingGame(
   const handleTraceStart = useCallback(
     (x: number, y: number) => {
       if (state.isComplete || isBusy) return;
-      setCurrentPath(`M${x},${y}`);
+      setCurrentPath((prev) => (prev ? prev + ` M${x},${y}` : `M${x},${y}`));
 
       const newlyVisited = updateCheckpoints(
         checkpointsRef.current,
@@ -156,7 +154,6 @@ export function useLetterTracingGame(
       );
       if (newlyVisited > 0) {
         setCheckpoints([...checkpointsRef.current]);
-        AudioManager.playPop(0.3); // lightweight haptic/sound
       }
     },
     [state.isComplete, isBusy, offset],
@@ -174,7 +171,6 @@ export function useLetterTracingGame(
       );
       if (newlyVisited > 0) {
         setCheckpoints([...checkpointsRef.current]);
-        AudioManager.playPop(0.3);
 
         const result = checkTracingProgress(checkpointsRef.current);
         if (result.isValid) {
@@ -188,30 +184,11 @@ export function useLetterTracingGame(
   const handleTraceEnd = useCallback(() => {
     if (!state.isComplete && !isBusy) {
       const result = checkTracingProgress(checkpointsRef.current);
-      if (!result.isValid) {
-        setCurrentPath("");
-        const points = generateCheckpoints(guideDString, 5);
-        const cps = points.map((p) => ({ point: p, visited: false }));
-        setCheckpoints(cps);
-        checkpointsRef.current = cps;
-
-        AudioManager.playError();
-        speakLetterTracingFeedback(t("tracing.tryAgain"));
-        setState((prev) => ({
-          ...prev,
-          feedback: {
-            type: "error",
-            message: t("tracing.tryAgain"),
-            emoji: "🤔",
-          },
-        }));
-        setTimeout(
-          () => setState((prev) => ({ ...prev, feedback: null })),
-          1000,
-        );
+      if (result.isValid) {
+        handleSuccess();
       }
     }
-  }, [state.isComplete, isBusy, guideDString, t]);
+  }, [state.isComplete, isBusy, handleSuccess]);
 
   return {
     state,

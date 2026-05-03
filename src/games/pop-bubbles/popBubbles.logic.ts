@@ -12,12 +12,14 @@ import {
   speakPopBubblesInstruction,
   stopPopBubblesTTS,
 } from "./popBubbles.audio";
+import { useGame } from "../../core/GameContext";
 
 export function usePopBubblesGame(
   childAgeMonths: number = 48,
   gameLayout: { width: number; height: number },
 ) {
   const { t } = useTranslation();
+  const { recordSuccess } = useGame();
 
   const [state, setState] = useState<PopBubblesGameState>({
     level: 1,
@@ -114,8 +116,12 @@ export function usePopBubblesGame(
         poppedCount: 0,
         feedback: null,
       }));
+
+      stopPopBubblesTTS().then(() => {
+        speakPopBubblesInstruction(t("popBubbles.instruction"));
+      });
     },
-    [gameLayout],
+    [gameLayout, t],
   );
 
   const handleRestart = useCallback(() => {
@@ -133,13 +139,9 @@ export function usePopBubblesGame(
   }, [layoutReadyRef.current, generateRound]);
 
   useEffect(() => {
-    stopPopBubblesTTS().then(() => {
-      speakPopBubblesInstruction(t("popBubbles.instruction"));
-    });
     return () => {
       stopPopBubblesTTS();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handlePopComplete = useCallback((id: number) => {
@@ -154,9 +156,10 @@ export function usePopBubblesGame(
       score: prev.score + 10,
     }));
 
+    recordSuccess();
     playBubblePop();
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-  }, []);
+  }, [recordSuccess]);
 
   useEffect(() => {
     if (

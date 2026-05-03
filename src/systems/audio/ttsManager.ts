@@ -66,6 +66,31 @@ export class TTSManager {
         const volume = options.volume ?? 1.0;
 
         try {
+            const { getVoiceAsset } = require('../../core/VoiceAssets');
+            const asset = getVoiceAsset(speechText);
+            if (asset) {
+                const { sound } = await ExpoAudio.Audio.Sound.createAsync(asset, { shouldPlay: true, volume });
+                if (mySpeakId !== this.speakId) {
+                    sound.unloadAsync();
+                    return;
+                }
+                this.currentVoice = sound;
+                sound.setOnPlaybackStatusUpdate((status) => {
+                    if (status.isLoaded && status.didJustFinish) {
+                        sound.unloadAsync();
+                        if (this.currentVoice === sound) this.currentVoice = null;
+                        if (options.shouldLock && mySpeakId === this.speakId) {
+                            options.onStatusChange?.(false);
+                        }
+                    }
+                });
+                return;
+            }
+        } catch (err) {
+            console.warn('[TTSManager] Failed to load local asset', err);
+        }
+
+        try {
             const controller = new AbortController();
             this.warmupController = controller;
 

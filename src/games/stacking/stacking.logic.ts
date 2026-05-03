@@ -5,12 +5,14 @@ import { StackingGameState, BlockData } from "./stacking.types";
 import { DIFFICULTY_CONFIG, BLOCK_COLORS } from "./stacking.config";
 import { speakStackingInstruction, stopStackingTTS } from "./stacking.tts";
 import { AudioManager } from "../../systems/audio/audioManager";
+import { useGame } from "../../core/GameContext";
 
 export function useStackingGame(
   childAgeMonths: number = 48,
   parentModeEnabled: boolean = false,
 ) {
   const { t } = useTranslation();
+  const { recordSuccess, recordError } = useGame();
 
   const [state, setState] = useState<StackingGameState>({
     level: 1,
@@ -161,14 +163,16 @@ export function useStackingGame(
         speakStackingInstruction((idx + 1).toString());
         setState((prev) => ({ ...prev, currentBlockIndex: idx + 1 }));
       }
+      recordSuccess();
     },
-    [params.blockSize, state.level, generateRound, showParentPrompt, t],
+    [params.blockSize, state.level, generateRound, showParentPrompt, t, recordSuccess],
   );
 
   const handleError = useCallback(() => {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
     AudioManager.playError();
-  }, []);
+    recordError();
+  }, [recordError]);
 
   const removeFloatingLabel = useCallback((id: number) => {
     setFloatingLabels((prev) => prev.filter((l) => l.id !== id));

@@ -226,7 +226,7 @@ function StackingBlock({
     })
     .onUpdate((event) => {
       const currentX = contextX.value + event.translationX;
-      const currentY = contextY.value + event.translationY;
+      const currentY = contextY.value - event.translationY;
       translateX.value = currentX;
       translateY.value = currentY;
 
@@ -262,7 +262,7 @@ function StackingBlock({
       scale.value = withSpring(1);
 
       const dropXOffset = contextX.value + event.translationX - platformX.value;
-      const dropY = contextY.value + event.translationY;
+      const dropY = contextY.value - event.translationY;
 
       let refXOffset = PLATFORM_WIDTH / 2 - blockSize / 2;
       let refY = PLATFORM_BOTTOM + 30;
