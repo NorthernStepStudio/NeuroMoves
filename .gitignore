@@ -7,3 +7,6 @@ credentials/
 *.jks
 test_output.txt
 test_error.txt
+
+# Android signing keys
+android/app/*.keystore
