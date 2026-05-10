@@ -25,13 +25,26 @@ const androidBuildIgnores = [
   new RegExp(`^${escapePathForRegex(path.join(androidAppPath, 'build'))}[\\\\/].*`),
 ];
 
+// Exclude transient, non-project folders at workspace root that can appear/disappear
+// while Gradle snapshots JS bundle task inputs on Windows.
+const workspaceTransientIgnores = [
+  new RegExp(`^${escapePathForRegex(path.join(workspaceRoot, '.tmp'))}[^\\\\/]*[\\\\/].*`),
+  new RegExp(`^${escapePathForRegex(path.join(workspaceRoot, 'tmp'))}[^\\\\/]*[\\\\/].*`),
+  new RegExp(`^${escapePathForRegex(path.join(workspaceRoot, 'build-artifacts'))}[\\\\/].*`),
+  new RegExp(`^${escapePathForRegex(path.join(workspaceRoot, 'b'))}[\\\\/].*`),
+  new RegExp(`^${escapePathForRegex(path.join(workspaceRoot, 'b-cxx'))}[\\\\/].*`),
+  new RegExp(`^${escapePathForRegex(path.join(workspaceRoot, 'archive'))}[\\\\/].*`),
+];
+
+const ignorePatterns = [...androidBuildIgnores, ...workspaceTransientIgnores];
+
 const existingBlockList = config.resolver.blockList;
 if (Array.isArray(existingBlockList)) {
-  config.resolver.blockList = [...existingBlockList, ...androidBuildIgnores];
+  config.resolver.blockList = [...existingBlockList, ...ignorePatterns];
 } else if (existingBlockList) {
-  config.resolver.blockList = [existingBlockList, ...androidBuildIgnores];
+  config.resolver.blockList = [existingBlockList, ...ignorePatterns];
 } else {
-  config.resolver.blockList = androidBuildIgnores;
+  config.resolver.blockList = ignorePatterns;
 }
 
 module.exports = config;

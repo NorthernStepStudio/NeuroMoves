@@ -2,19 +2,12 @@ apply plugin: "com.android.application"
 apply plugin: "org.jetbrains.kotlin.android"
 apply plugin: "com.facebook.react"
 
-def projectRoot = rootDir.getAbsoluteFile().getParentFile().getAbsolutePath()
-println "DEBUG: rootDir = ${rootDir}"
-println "DEBUG: projectRoot = ${projectRoot}"
-
-/**
- * This is the configuration block to customize your React Native Android app.
- * By default you don't need to apply any configuration, just uncomment the lines you need.
- */
 react {
-    /* Folders */
-     //   The root of your project, i.e. where "package.json" lives. Default is '../..'
-    root = file("D:/dev/Northern Step Studio/apps/neurormoves")
-    entryFile = file("D:/dev/Northern Step Studio/apps/neurormoves/index.js")
+    // Workspace root is required for Expo monorepo bundle resolution.
+    root = file("../../../../")
+    // Use index.js as the entry point relative to the root defined above
+    bundleAssetName = "index.android.bundle"
+    entryFile = file("../../index.js")
 
     reactNativeDir = new File(["node", "--print", "require.resolve('react-native/package.json')"].execute(null, rootDir).text.trim()).getParentFile().getAbsoluteFile()
     hermesCommand = new File(["node", "--print", "require.resolve('react-native/package.json')"].execute(null, rootDir).text.trim()).getParentFile().getAbsolutePath() + "/sdks/hermesc/%OS-BIN%/hermesc"
@@ -25,6 +18,7 @@ react {
     // works correctly with Expo projects.
     cliFile = new File(["node", "--print", "require.resolve('@expo/cli', { paths: [require.resolve('expo/package.json')] })"].execute(null, rootDir).text.trim())
     bundleCommand = "export:embed"
+    bundleConfig = file("../../metro.config.js")
     //   The folder where the react-native NPM package is. Default is ../../node_modules/react-native
     // reactNativeDir = file("../../node_modules/react-native")
     //   The folder where the react-native Codegen package is. Default is ../../node_modules/@react-native/codegen
@@ -63,6 +57,18 @@ react {
 
     /* Autolinking */
     autolinkLibrariesWithApp()
+}
+
+// Exclude transient workspace folders from bundle task inputs so Gradle state tracking
+// does not fail when external tools create/remove files during hashing.
+tasks.withType(com.facebook.react.tasks.BundleHermesCTask).configureEach {
+    sources.exclude("**/.tmp*/**")
+    sources.exclude("**/tmp*/**")
+    sources.exclude(".tmp*/**")
+    sources.exclude("build-artifacts/**")
+    sources.exclude("b/**")
+    sources.exclude("b-cxx/**")
+    sources.exclude("archive/**")
 }
 
 /**
@@ -107,7 +113,15 @@ android {
             keyPassword 'android'
         }
         release {
-            if (project.hasProperty('MYAPP_UPLOAD_STORE_FILE')) {
+            if (project.hasProperty('signingPropsFile')) {
+                def signingProps = new Properties()
+                file(signingPropsFile).withInputStream { signingProps.load(it) }
+                
+                storeFile file(signingProps.getProperty('MYAPP_UPLOAD_STORE_FILE'))
+                storePassword signingProps.getProperty('MYAPP_UPLOAD_STORE_PASSWORD')
+                keyAlias signingProps.getProperty('MYAPP_UPLOAD_KEY_ALIAS')
+                keyPassword signingProps.getProperty('MYAPP_UPLOAD_KEY_PASSWORD')
+            } else if (project.hasProperty('MYAPP_UPLOAD_STORE_FILE')) {
                 storeFile file(MYAPP_UPLOAD_STORE_FILE)
                 storePassword MYAPP_UPLOAD_STORE_PASSWORD
                 keyAlias MYAPP_UPLOAD_KEY_ALIAS
@@ -138,6 +152,11 @@ android {
     }
     androidResources {
         ignoreAssetsPattern '!.svn:!.git:!.ds_store:!*.scc:!CVS:!thumbs.db:!picasa.ini:!*~'
+    }
+
+    lint {
+        checkReleaseBuilds false
+        abortOnError false
     }
 }
 

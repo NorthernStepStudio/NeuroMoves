@@ -4,7 +4,7 @@
     "owner": "northernstep",
     "slug": "neuromoves",
     "scheme": "neuromoves",
-    "version": "1.0.0",
+    "version": "1.0.2",
     "orientation": "portrait",
     "icon": "./assets/logo-square.png",
     "userInterfaceStyle": "dark",
@@ -32,7 +32,8 @@
         "android.permission.READ_EXTERNAL_STORAGE",
         "android.permission.RECORD_AUDIO"
       ],
-      "package": "com.northernstepstudio.neuromoves"
+      "package": "com.northernstepstudio.neuromoves",
+      "versionCode": 2
     },
     "plugins": [
       [
