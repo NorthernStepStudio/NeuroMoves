@@ -120,11 +120,16 @@ export class VoiceService {
 
         // A. Static Asset Check (Animal sounds, etc)
         const isShortCue = speechText.split(' ').length <= 12;
-        const asset = isShortCue ? getVoiceAsset(speechText) : null;
-        if (asset) {
+        const assetData = isShortCue ? getVoiceAsset(speechText) : null;
+        if (assetData) {
             if (mySpeakId !== this.speakId) return;
             try {
-                const { sound } = await ExpoAudio.Audio.Sound.createAsync(asset, { volume });
+                const resolvedAsset = (assetData && assetData.asset) ? assetData.asset : assetData;
+                const assetRate = (assetData && assetData.rate) ? assetData.rate : undefined;
+                const { sound } = await ExpoAudio.Audio.Sound.createAsync(resolvedAsset, { volume });
+                if (assetRate) {
+                    try { await sound.setRateAsync(assetRate, true); } catch (e) {}
+                }
                 if (mySpeakId !== this.speakId) { sound.unloadAsync(); return; }
                 this.currentVoice = sound;
                 await sound.playAsync();
@@ -177,9 +182,14 @@ export class VoiceService {
                         finalUri = localFile;
                     }
 
-                    const { sound } = await ExpoAudio.Audio.Sound.createAsync({ uri: finalUri }, { shouldPlay: true, volume });
+                    const { sound } = await ExpoAudio.Audio.Sound.createAsync({ uri: finalUri }, { shouldPlay: false, volume });
+                    const rateForUri = (filename && filename.includes('neuromoves_movement_coach')) ? 1.25 : undefined;
+                    if (rateForUri) {
+                        try { await sound.setRateAsync(rateForUri, true); } catch (e) {}
+                    }
                     if (mySpeakId !== this.speakId) { sound.unloadAsync(); return; }
                     this.currentVoice = sound;
+                    await sound.playAsync();
                     sound.setOnPlaybackStatusUpdate((status: AVPlaybackStatus) => {
                         if (status.isLoaded && status.didJustFinish) {
                             sound.unloadAsync();

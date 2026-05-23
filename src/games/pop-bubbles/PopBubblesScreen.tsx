@@ -109,6 +109,7 @@ function BubbleComponent({
   const scale = useSharedValue(0);
   const opacity = useSharedValue(1);
   const isPopped = useSharedValue(false);
+  const [popped, setPopped] = useState(false);
 
   useEffect(() => {
     scale.value = withSpring(1);
@@ -154,9 +155,10 @@ function BubbleComponent({
   }, []);
 
   const handlePress = () => {
-    if (isPopped.value) return;
+    if (isPopped.value || popped) return;
     isPopped.value = true;
-    runOnJS(onPop)();
+    setPopped(true);
+    onPop();
 
     scale.value = withTiming(2.5, { duration: 120 });
     opacity.value = withTiming(0, { duration: 250 });
@@ -165,10 +167,9 @@ function BubbleComponent({
   const animatedStyle = useAnimatedStyle(() => {
     return {
       left: x.value,
-      top: y.value,
+      top: y.value + floatOffset.value * -18,
       opacity: opacity.value,
       transform: [
-        { translateY: floatOffset.value * -18 },
         { scale: scale.value },
       ],
     };
@@ -176,6 +177,7 @@ function BubbleComponent({
 
   return (
     <Animated.View
+      pointerEvents={popped ? "none" : "auto"}
       style={[
         styles.bubbleWrapper,
         { width: data.size, height: data.size },
@@ -183,7 +185,8 @@ function BubbleComponent({
       ]}
     >
       <Pressable
-        onPress={handlePress}
+        onPressIn={handlePress}
+        disabled={popped}
         style={[
           styles.bubble,
           { backgroundColor: data.color, borderRadius: data.size / 2 },

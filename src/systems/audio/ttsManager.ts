@@ -12,6 +12,8 @@ export interface TTSOptions {
     volume?: number;
     owner?: string;
     shouldLock?: boolean;
+    waitForCompletion?: boolean;
+    debugLabel?: string;
     onStatusChange?: (isBusy: boolean) => void;
 }
 
@@ -20,6 +22,7 @@ export class TTSManager {
     private static currentOwner: string | null = null;
     private static speakId = 0;
     private static warmupController: AbortController | null = null;
+    private static pendingCompletion: (() => void) | null = null;
 
     static async ensureCacheDir() {
         const info = await FileSystem.getInfoAsync(CACHE_DIR);
@@ -41,6 +44,10 @@ export class TTSManager {
             this.warmupController.abort();
             this.warmupController = null;
         }
+        if (this.pendingCompletion) {
+            this.pendingCompletion();
+            this.pendingCompletion = null;
+        }
         this.currentOwner = null;
         onStatusChange?.(false);
     }
@@ -56,34 +63,78 @@ export class TTSManager {
         const speechText = String(text);
         
         const mySpeakId = ++this.speakId;
-        this.currentOwner = options.owner || null;
 
         if (options.shouldLock) options.onStatusChange?.(true);
 
         await this.stop(); // Clean previous
+        this.currentOwner = options.owner || null;
+
+        const waitForCompletion = options.waitForCompletion === true;
+        let didComplete = false;
+        const completionPromise = waitForCompletion
+            ? new Promise<void>((resolve) => {
+                this.pendingCompletion = () => {
+                    if (didComplete) return;
+                    didComplete = true;
+                    resolve();
+                };
+            })
+            : null;
+
+        const complete = () => {
+            if (didComplete) return;
+            didComplete = true;
+            if (this.pendingCompletion) {
+                const resolver = this.pendingCompletion;
+                this.pendingCompletion = null;
+                resolver();
+            }
+        };
+
+        if (options.debugLabel) {
+            console.log(`[TTS] start ${options.debugLabel}`, { speechText, speakId: mySpeakId });
+        }
 
         const currentLang = i18n.language || 'en';
         const volume = options.volume ?? 1.0;
 
         try {
             const { getVoiceAsset } = require('../../core/VoiceAssets');
-            const asset = getVoiceAsset(speechText);
-            if (asset) {
-                const { sound } = await ExpoAudio.Audio.Sound.createAsync(asset, { shouldPlay: true, volume });
+            const assetData = getVoiceAsset(speechText);
+            if (assetData) {
+                const resolvedAsset = (assetData && assetData.asset) ? assetData.asset : assetData;
+                const assetRate = (assetData && assetData.rate) ? assetData.rate : options.rate;
+                const { sound } = await ExpoAudio.Audio.Sound.createAsync(resolvedAsset, { shouldPlay: false, volume });
+                if (assetRate) {
+                    try { await sound.setRateAsync(assetRate, true); } catch (e) {}
+                }
                 if (mySpeakId !== this.speakId) {
                     sound.unloadAsync();
+                    complete();
                     return;
                 }
                 this.currentVoice = sound;
                 sound.setOnPlaybackStatusUpdate((status) => {
-                    if (status.isLoaded && status.didJustFinish) {
+                    if (!status.isLoaded) {
+                        complete();
+                        return;
+                    }
+                    if (status.didJustFinish) {
                         sound.unloadAsync();
                         if (this.currentVoice === sound) this.currentVoice = null;
+                        if (options.debugLabel && mySpeakId === this.speakId) {
+                            console.log(`[TTS] end ${options.debugLabel}`, { speakId: mySpeakId });
+                        }
                         if (options.shouldLock && mySpeakId === this.speakId) {
                             options.onStatusChange?.(false);
                         }
+                        complete();
                     }
                 });
+                await sound.playAsync();
+                if (waitForCompletion && completionPromise) {
+                    await completionPromise;
+                }
                 return;
             }
         } catch (err) {
@@ -126,24 +177,41 @@ export class TTSManager {
 
                     const { sound } = await ExpoAudio.Audio.Sound.createAsync(
                         { uri: finalUri }, 
-                        { shouldPlay: true, volume }
+                        { shouldPlay: false, volume }
                     );
+                    const rateForUri = options.rate ?? (filename && filename.includes('neuromoves_movement_coach') ? 1.25 : undefined);
+                    if (rateForUri) {
+                        try { await sound.setRateAsync(rateForUri, true); } catch (e) {}
+                    }
                     
                     if (mySpeakId !== this.speakId) { 
                         sound.unloadAsync(); 
+                        complete();
                         return; 
                     }
                     
                     this.currentVoice = sound;
                     sound.setOnPlaybackStatusUpdate((status) => {
-                        if (status.isLoaded && status.didJustFinish) {
+                        if (!status.isLoaded) {
+                            complete();
+                            return;
+                        }
+                        if (status.didJustFinish) {
                             sound.unloadAsync();
                             if (this.currentVoice === sound) this.currentVoice = null;
+                            if (options.debugLabel && mySpeakId === this.speakId) {
+                                console.log(`[TTS] end ${options.debugLabel}`, { speakId: mySpeakId });
+                            }
                             if (options.shouldLock && mySpeakId === this.speakId) {
                                 options.onStatusChange?.(false);
                             }
+                            complete();
                         }
                     });
+                    await sound.playAsync();
+                    if (waitForCompletion && completionPromise) {
+                        await completionPromise;
+                    }
                     return;
                 }
             }
@@ -162,18 +230,27 @@ export class TTSManager {
                 rate: options.rate ?? 0.9,
                 volume,
                 onDone: () => { 
+                    if (options.debugLabel && mySpeakId === this.speakId) {
+                        console.log(`[TTS] end ${options.debugLabel}`, { speakId: mySpeakId });
+                    }
                     if (options.shouldLock && mySpeakId === this.speakId) {
                         options.onStatusChange?.(false);
                     } 
+                    complete();
                 },
                 onError: () => { 
                     if (options.shouldLock && mySpeakId === this.speakId) {
                         options.onStatusChange?.(false);
                     } 
+                    complete();
                 }
             });
+            if (waitForCompletion && completionPromise) {
+                await completionPromise;
+            }
         } catch (err) {
             if (options.shouldLock && mySpeakId === this.speakId) options.onStatusChange?.(false);
+            complete();
         }
     }
 }

@@ -64,10 +64,20 @@ export function useStackingGame(
     [parentModeEnabled, t],
   );
 
+  const getBlocksForLevel = useCallback((level: number) => {
+    // Platform starts moving side-to-side at level 7.
+    // After that, gradually increase tower length up to 10 blocks.
+    if (level < 7) {
+      return 5;
+    }
+    return Math.min(10, 5 + (level - 6));
+  }, []);
+
   const generateRound = useCallback(
     (level: number) => {
       const initialBlocks: BlockData[] = [];
-      for (let i = 0; i < 5; i++) {
+      const blocksForRound = getBlocksForLevel(level);
+      for (let i = 0; i < blocksForRound; i++) {
         initialBlocks.push({
           id: blockIdRef.current++,
           color: BLOCK_COLORS[i % BLOCK_COLORS.length],
@@ -91,7 +101,7 @@ export function useStackingGame(
         speakStackingInstruction(t("stacking.instruction"));
       });
     },
-    [t],
+    [getBlocksForLevel, t],
   );
 
   const handleRestart = useCallback(() => {
@@ -119,6 +129,8 @@ export function useStackingGame(
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       AudioManager.playSuccess();
 
+      const blocksForRound = state.blocks.length || 5;
+
       blockPositionsRef.current[idx] = { x: targetXOffset, y: targetY };
 
       setState((prev) => ({
@@ -139,8 +151,8 @@ export function useStackingGame(
         },
       ]);
 
-      if (idx === 4) {
-        speakStackingInstruction("5");
+      if (idx === blocksForRound - 1) {
+        speakStackingInstruction(blocksForRound.toString());
         setTimeout(
           () => speakStackingInstruction(t("stacking.towerBuilt")),
           600,
@@ -165,7 +177,15 @@ export function useStackingGame(
       }
       recordSuccess();
     },
-    [params.blockSize, state.level, generateRound, showParentPrompt, t, recordSuccess],
+    [
+      params.blockSize,
+      state.level,
+      state.blocks.length,
+      generateRound,
+      showParentPrompt,
+      t,
+      recordSuccess,
+    ],
   );
 
   const handleError = useCallback(() => {

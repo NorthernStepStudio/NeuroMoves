@@ -313,6 +313,14 @@ export const VOICE_ASSETS: Record<string, any> = {
     'rawr': require('../../assets/sounds/voice/sound_rawr.mp3'),
     'ugh ugh': require('../../assets/sounds/voice/sound_ugh.mp3'),
     'bark': require('../../assets/sounds/voice/sound_bark.mp3'),
+
+    // Neuromoves generated mode audio (copied into app assets)
+    'neuromoves_calm_guide': { asset: require('../../assets/sounds/voice/neuromoves_calm_guide.wav'), rate: 1.25 },
+    'neuromoves_movement_coach': { asset: require('../../assets/sounds/voice/neuromoves_movement_coach.wav'), rate: 1.25 },
+    'neuromoves_playful_helper': { asset: require('../../assets/sounds/voice/neuromoves_playful_helper.wav'), rate: 1.25 },
+    'neuromoves_reset_support': { asset: require('../../assets/sounds/voice/neuromoves_reset_support.wav'), rate: 1.25 },
+    'neuromoves_success_praise': { asset: require('../../assets/sounds/voice/neuromoves_success_praise.wav'), rate: 1.25 },
+    'movement coach': { asset: require('../../assets/sounds/voice/neuromoves_movement_coach.wav'), rate: 1.25 },
 };
 
 /**

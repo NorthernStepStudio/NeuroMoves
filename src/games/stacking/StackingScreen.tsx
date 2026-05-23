@@ -1,5 +1,5 @@
-import React, { useEffect } from "react";
-import { View, Text, StyleSheet, Dimensions } from "react-native";
+import React, { useEffect, useState } from "react";
+import { View, Text, StyleSheet, Dimensions, LayoutChangeEvent } from "react-native";
 import Animated, {
   useSharedValue,
   SharedValue,
@@ -23,10 +23,40 @@ import { PLATFORM_BOTTOM, PLATFORM_WIDTH } from "./stacking.config";
 import { colors, spacing, borderRadius, fontSize } from "../../theme/colors";
 
 const { width, height } = Dimensions.get("window");
-const SPAWN_BOTTOM = height - 350;
+const DEFAULT_GAME_AREA_HEIGHT = Math.round(height * 0.72);
+const BLOCK_HEIGHT_RATIO = 0.7;
+const STACK_STEP_RATIO_COMPACT = 0.5;
+
+const getSpawnBottom = (
+  gameAreaHeight: number,
+  level: number,
+  blockSize: number,
+) => {
+  const baseSpawn = Math.max(
+    PLATFORM_BOTTOM + 300,
+    Math.round(gameAreaHeight * 0.82),
+  );
+
+  // After level 7 (when the platform starts side-to-side movement),
+  // raise spawn height further to increase play space for taller towers.
+  const postLevelSevenBoost =
+    level >= 7 ? Math.min(160, 60 + (level - 7) * 24) : 0;
+
+  const desiredSpawn = baseSpawn + postLevelSevenBoost;
+  const blockHeight = blockSize * BLOCK_HEIGHT_RATIO;
+
+  // Keep the spawn inside the game area so touches remain reliable.
+  const maxSpawnWithinArea = Math.max(
+    PLATFORM_BOTTOM + 220,
+    gameAreaHeight - blockHeight - 8,
+  );
+
+  return Math.min(desiredSpawn, maxSpawnWithinArea);
+};
 
 export default function StackingScreen() {
   const { t } = useTranslation();
+  const [gameAreaHeight, setGameAreaHeight] = useState(DEFAULT_GAME_AREA_HEIGHT);
   const {
     state,
     params,
@@ -46,8 +76,9 @@ export default function StackingScreen() {
 
   useEffect(() => {
     const midX = width / 2 - PLATFORM_WIDTH / 2;
-    const minX = 20;
-    const maxX = width - PLATFORM_WIDTH - 20;
+    const edgePadding = 8;
+    const minX = edgePadding;
+    const maxX = width - PLATFORM_WIDTH - edgePadding;
 
     if (state.level >= 7) {
       platformX.value = midX;
@@ -76,7 +107,24 @@ export default function StackingScreen() {
         false,
       );
     } else if (state.level >= 3) {
-      platformX.value = minX + Math.random() * (maxX - minX);
+      // Lower levels should still feel calm, but avoid tiny center shifts.
+      // Force position into a left or right zone farther from middle.
+      const centerDeadZone = Math.max(42, (maxX - minX) * 0.24);
+      const goRight = Math.random() > 0.5;
+
+      const rightMin = Math.min(maxX, midX + centerDeadZone);
+      const leftMax = Math.max(minX, midX - centerDeadZone);
+
+      let nextX = midX;
+      if (goRight && rightMin < maxX) {
+        nextX = rightMin + Math.random() * (maxX - rightMin);
+      } else if (!goRight && leftMax > minX) {
+        nextX = minX + Math.random() * (leftMax - minX);
+      } else {
+        nextX = minX + Math.random() * (maxX - minX);
+      }
+
+      platformX.value = withSpring(nextX, { damping: 14, stiffness: 120 });
     } else {
       platformX.value = midX;
     }
@@ -87,6 +135,15 @@ export default function StackingScreen() {
       left: platformX.value,
     };
   });
+
+  const spawnBottom = getSpawnBottom(gameAreaHeight, state.level, params.blockSize);
+
+  const handleGameAreaLayout = (event: LayoutChangeEvent) => {
+    const { height: nextHeight } = event.nativeEvent.layout;
+    if (nextHeight > 0) {
+      setGameAreaHeight(nextHeight);
+    }
+  };
 
   return (
     <GameShell
@@ -99,7 +156,7 @@ export default function StackingScreen() {
         <Text style={styles.subtitle}>{t("stacking.subtitle")}</Text>
       </View>
 
-      <View style={styles.gameArea}>
+      <View style={styles.gameArea} onLayout={handleGameAreaLayout}>
         {parentPrompt ? (
           <View style={styles.parentPromptContainer}>
             <Text style={styles.parentPromptLabel}>
@@ -125,9 +182,11 @@ export default function StackingScreen() {
             index={index}
             color={block.color}
             blockSize={params.blockSize}
+            totalBlocks={state.blocks.length}
             isCurrent={index === state.currentBlockIndex && !block.isPlaced}
             isPlaced={block.isPlaced}
             platformX={platformX}
+            spawnBottom={spawnBottom}
             isPermissive={isPermissive}
             level={state.level}
             onSuccess={(x, y) =>
@@ -171,9 +230,11 @@ interface BlockProps {
   index: number;
   color: string;
   blockSize: number;
+  totalBlocks: number;
   isCurrent: boolean;
   isPlaced: boolean;
   platformX: SharedValue<number>;
+  spawnBottom: number;
   isPermissive: boolean;
   level: number;
   onSuccess: (x: number, y: number) => void;
@@ -187,9 +248,11 @@ function StackingBlock({
   index,
   color,
   blockSize,
+  totalBlocks,
   isCurrent,
   isPlaced,
   platformX,
+  spawnBottom,
   isPermissive,
   level,
   onSuccess,
@@ -198,14 +261,35 @@ function StackingBlock({
   setIsHolding,
   isHolding,
 }: BlockProps) {
+  const blockHeight = blockSize * BLOCK_HEIGHT_RATIO;
+  const configuredStackStep =
+    blockSize * (level >= 7 ? STACK_STEP_RATIO_COMPACT : BLOCK_HEIGHT_RATIO);
+  const baseStackY = PLATFORM_BOTTOM + 30;
+  const requiredClearance = level >= 7 ? 140 : 110;
+  const maxStepForClearance =
+    totalBlocks > 1
+      ? (spawnBottom - requiredClearance - baseStackY) / (totalBlocks - 1)
+      : configuredStackStep;
+  const minCompressedStep = blockSize * 0.3;
+  const stackStep = Math.max(
+    minCompressedStep,
+    Math.min(configuredStackStep, maxStepForClearance),
+  );
+
   const translateX = useSharedValue(width / 2 - blockSize / 2);
-  const translateY = useSharedValue(SPAWN_BOTTOM);
+  const translateY = useSharedValue(spawnBottom);
   const rotation = useSharedValue(0);
   const scale = useSharedValue(1);
 
   const contextX = useSharedValue(0);
   const contextY = useSharedValue(0);
   const hasPassedValidDropZone = useSharedValue(false);
+
+  useEffect(() => {
+    if (!isPlaced) {
+      translateY.value = spawnBottom;
+    }
+  }, [isPlaced, spawnBottom, translateY]);
 
   const animatedX = useDerivedValue(() => {
     if (isPlaced) {
@@ -232,13 +316,13 @@ function StackingBlock({
 
       if (isPermissive) {
         const dropXOffset = currentX - platformX.value;
-        const absoluteY = SPAWN_BOTTOM - (SPAWN_BOTTOM - currentY);
+        const absoluteY = currentY;
 
         let refXOffset = PLATFORM_WIDTH / 2 - blockSize / 2;
         let refY = PLATFORM_BOTTOM + 30;
         if (prevBlockPos) {
           refXOffset = prevBlockPos.x;
-          refY = prevBlockPos.y + blockSize * 0.7;
+          refY = prevBlockPos.y + stackStep;
         }
 
         if (index === 0) {
@@ -251,7 +335,7 @@ function StackingBlock({
         } else {
           const distY = Math.abs(absoluteY - refY);
           const distX = Math.abs(dropXOffset - refXOffset);
-          if (distY < 80 && distX < blockSize * 0.9) {
+          if (distY < 90 && distX < blockSize * 0.95) {
             hasPassedValidDropZone.value = true;
           }
         }
@@ -268,7 +352,7 @@ function StackingBlock({
       let refY = PLATFORM_BOTTOM + 30;
       if (prevBlockPos) {
         refXOffset = prevBlockPos.x;
-        refY = prevBlockPos.y + blockSize * 0.7;
+        refY = prevBlockPos.y + stackStep;
       }
 
       let isSuccess = false;
@@ -288,7 +372,7 @@ function StackingBlock({
       } else {
         const distY = Math.abs(dropY - refY);
         const distX = Math.abs(dropXOffset - refXOffset);
-        if (distY < 80 && distX < blockSize * 0.9) {
+        if (distY < 90 && distX < blockSize * 0.95) {
           isSuccess = true;
           targetXOffset = dropXOffset;
         }
@@ -301,7 +385,7 @@ function StackingBlock({
         runOnJS(onSuccess)(targetXOffset, targetY);
       } else {
         translateX.value = withSpring(width / 2 - blockSize / 2);
-        translateY.value = withSpring(SPAWN_BOTTOM);
+        translateY.value = withSpring(spawnBottom);
         rotation.value = withSpring(0);
         runOnJS(onError)();
       }
@@ -323,7 +407,7 @@ function StackingBlock({
           styles.block,
           {
             width: blockSize,
-            height: blockSize * 0.7,
+            height: blockHeight,
             backgroundColor: color,
           },
           animatedStyle,
@@ -340,8 +424,8 @@ function StackingBlock({
 }
 
 const styles = StyleSheet.create({
-  header: { alignItems: "center", paddingVertical: spacing.md },
-  subtitle: { fontSize: fontSize.sm, color: colors.textMuted, marginTop: 4 },
+  header: { alignItems: "center", paddingVertical: spacing.xs },
+  subtitle: { fontSize: fontSize.xs, color: colors.textMuted, marginTop: 1 },
   parentPromptContainer: {
     position: "absolute",
     top: 20,

@@ -26,8 +26,11 @@ export default function LanguageGateScreen({
     }
 
     setBusy(true);
-    await onSelectLanguage(language);
-    setBusy(false);
+    try {
+      await onSelectLanguage(language);
+    } finally {
+      setBusy(false);
+    }
   };
 
   return (

@@ -9,8 +9,8 @@ export interface TraceValidationOptions {
 }
 
 const DEFAULTS: Required<TraceValidationOptions> = {
-  pathTolerance: 30, // Much more precise to match the new 'pen' look
-  requiredCoverage: 0.98, // Must cover almost the entire letter to pass
+  pathTolerance: 36, // Kinder to inner loops/joins like B, 8, and 9.
+  requiredCoverage: 0.9, // Encourage full tracing without demanding near-perfect coverage.
 };
 
 /**

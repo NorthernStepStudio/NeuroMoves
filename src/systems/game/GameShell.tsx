@@ -98,10 +98,12 @@ const styles = StyleSheet.create({
     },
     statBadge: {
         alignItems: 'center',
-        backgroundColor: colors.bgPrimary,
+        backgroundColor: colors.bgSecondary,
         paddingHorizontal: spacing.sm,
         paddingVertical: spacing.xs,
         borderRadius: 8,
+        borderWidth: 1,
+        borderColor: colors.glassBorder,
     },
     statLabel: {
         fontSize: 10,
@@ -111,7 +113,7 @@ const styles = StyleSheet.create({
     statValue: {
         fontSize: 16,
         fontWeight: '800',
-        color: colors.bgPrimary,
+        color: colors.accentPrimary,
     },
     gameContent: {
         flex: 1,

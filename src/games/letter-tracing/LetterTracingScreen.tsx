@@ -8,7 +8,7 @@ import {
   Pressable,
   ScrollView,
 } from "react-native";
-import Svg, { Path, Circle, G, Defs, ClipPath } from "react-native-svg";
+import Svg, { Path, Circle, G } from "react-native-svg";
 import { useTranslation } from "react-i18next";
 
 import { GameShell } from "../../systems/game/GameShell";
@@ -21,8 +21,6 @@ import { LetterCase } from "./letterTracing.types";
 import {
   TRACE_WIDTH,
   STROKE_COLOR,
-  FILL_COLOR,
-  ERROR_COLOR,
   DOT_COLOR,
 } from "./letterTracing.config";
 import { colors, spacing, borderRadius, fontSize } from "../../theme/colors";
@@ -38,8 +36,8 @@ export default function LetterTracingScreen() {
   const {
     state,
     guideDString,
-    currentPath,
-    checkpoints,
+    tracePathD,
+    hasTraceStarted,
     startDot,
     handleTraceStart,
     handleTraceMove,
@@ -63,6 +61,9 @@ export default function LetterTracingScreen() {
           handleTraceMove(evt.nativeEvent.locationX, evt.nativeEvent.locationY);
         },
         onPanResponderRelease: () => {
+          handleTraceEnd();
+        },
+        onPanResponderTerminate: () => {
           handleTraceEnd();
         },
       }),
@@ -130,21 +131,6 @@ export default function LetterTracingScreen() {
 
         <View style={styles.canvasContainer} {...panResponder.panHandlers}>
           <Svg width={CANVAS_SIZE} height={CANVAS_SIZE} style={styles.svg}>
-            <Defs>
-              <ClipPath id="traceClip">
-                <Path
-                  d={guideDString}
-                  stroke="black"
-                  strokeWidth={TRACE_WIDTH * 1.5}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  fill="none"
-                  x={OFFSET}
-                  y={OFFSET}
-                />
-              </ClipPath>
-            </Defs>
-
             <G>
               {/* The guide road */}
               <Path
@@ -158,33 +144,22 @@ export default function LetterTracingScreen() {
                 y={OFFSET}
               />
 
-              {/* Dotted center line */}
-              <Path
-                d={guideDString}
-                stroke="#FFFFFF"
-                strokeWidth={4}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                fill="none"
-                strokeDasharray="8, 12"
-                x={OFFSET}
-                y={OFFSET}
-              />
-
-              {/* Checkpoint dots */}
-              {checkpoints.map((cp, idx) => (
-                <Circle
-                  key={`cp-${idx}`}
-                  cx={cp.point.x + OFFSET}
-                  cy={cp.point.y + OFFSET}
-                  r={12}
-                  fill={cp.visited ? FILL_COLOR : "#CBD5E1"}
-                  opacity={cp.visited ? 1 : 0.4}
+              {/* Path-locked tracing progress */}
+              {hasTraceStarted && tracePathD ? (
+                <Path
+                  d={tracePathD}
+                  stroke="#2563EB"
+                  strokeWidth={TRACE_WIDTH * 0.55}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  fill="none"
+                  x={OFFSET}
+                  y={OFFSET}
                 />
-              ))}
+              ) : null}
 
               {/* Start indicator dot */}
-              {!state.isComplete && currentPath === "" && (
+              {!state.isComplete && !hasTraceStarted && (
                 <Circle
                   cx={startDot.x}
                   cy={startDot.y}
@@ -194,8 +169,6 @@ export default function LetterTracingScreen() {
                   strokeWidth={3}
                 />
               )}
-
-              {/* The player's drawn path (liner tracing removed by request) */}
             </G>
           </Svg>
         </View>
