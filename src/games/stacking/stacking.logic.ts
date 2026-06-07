@@ -75,8 +75,10 @@ export function useStackingGame(
 
   const generateRound = useCallback(
     (level: number) => {
+      try { console.log('[Stacking] generateRound called', { level }); } catch (e) {}
       const initialBlocks: BlockData[] = [];
       const blocksForRound = getBlocksForLevel(level);
+      try { console.log('[Stacking] blocksForRound', { level, blocksForRound }); } catch (e) {}
       for (let i = 0; i < blocksForRound; i++) {
         initialBlocks.push({
           id: blockIdRef.current++,
@@ -119,17 +121,17 @@ export function useStackingGame(
   }, []);
 
   const handleSuccess = useCallback(
-    (
+    async (
       idx: number,
       targetXOffset: number,
       targetY: number,
       platformXValue: number,
       height: number,
+      blocksForRoundParam?: number,
     ) => {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      AudioManager.playSuccess();
 
-      const blocksForRound = state.blocks.length || 5;
+      const blocksForRound = blocksForRoundParam ?? state.blocks.length ?? 5;
 
       blockPositionsRef.current[idx] = { x: targetXOffset, y: targetY };
 
@@ -152,27 +154,44 @@ export function useStackingGame(
       ]);
 
       if (idx === blocksForRound - 1) {
-        speakStackingInstruction(blocksForRound.toString());
-        setTimeout(
-          () => speakStackingInstruction(t("stacking.towerBuilt")),
-          600,
-        );
+        // Final block: start spoken final count but don't block on TTS.
+        try {
+          speakStackingInstruction(blocksForRound.toString(), { waitForCompletion: false, debugLabel: 'stack-final-count' }).catch(() => {});
+        } catch (e) {}
 
-        setState((prev) => ({
-          ...prev,
-          feedback: {
-            type: "success",
-            message: t("stacking.towerBuilt"),
-            emoji: "🗼",
-          },
-        }));
-        showParentPrompt("success");
+        // Log for debugging
+        try { console.log('[Stacking] final block placed', { level: state.level, blocksForRound, idx }); } catch (e) {}
 
+        // Schedule success feedback shortly after the count starts (timeout ensures we don't block forever)
+        const nextLevel = state.level + 1;
+        try { console.log('[Stacking] scheduling nextLevel', { nextLevel }); } catch (e) {}
+        // Wait slightly longer (around TTS gap) so spoken count finishes before success sound
         setTimeout(() => {
-          generateRound(state.level + 1);
-        }, 3500);
+          try { AudioManager.playSuccess(); } catch (e) {}
+          setState((prev) => ({
+            ...prev,
+            feedback: {
+              type: "success",
+              message: t("stacking.towerBuilt"),
+              emoji: "🗼",
+            },
+          }));
+          showParentPrompt("success");
+        }, 2000);
+
+        // Advance to next level after a short pause
+        setTimeout(() => {
+          try { console.log('[Stacking] invoking generateRound for nextLevel', { nextLevel }); } catch (e) {}
+          try { generateRound(nextLevel); } catch (e) { console.warn('[Stacking] generateRound failed', e); }
+        }, 4200);
       } else {
-        speakStackingInstruction((idx + 1).toString());
+        // Non-final block: play a simple pop sound and announce the block count
+        AudioManager.playPop();
+        try {
+          await speakStackingInstruction((idx + 1).toString(), { debugLabel: `stack-count-${idx + 1}` });
+        } catch (e) {
+          // ignore TTS errors
+        }
         setState((prev) => ({ ...prev, currentBlockIndex: idx + 1 }));
       }
       recordSuccess();
@@ -180,7 +199,6 @@ export function useStackingGame(
     [
       params.blockSize,
       state.level,
-      state.blocks.length,
       generateRound,
       showParentPrompt,
       t,

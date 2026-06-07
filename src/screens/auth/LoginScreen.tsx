@@ -34,7 +34,7 @@ export default function LoginScreen() {
         process.env.EXPO_PUBLIC_GOOGLE_EXPO_CLIENT_ID ||
         process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID;
 
-      const redirectUri = 'https://auth.expo.io/@northernstep/neuromoves';
+      const redirectUri = AuthSession.makeRedirectUri({ useProxy: true });
 
       return {
         clientId: expoClientId,

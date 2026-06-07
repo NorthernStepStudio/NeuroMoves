@@ -97,8 +97,10 @@ export function useYesNoGame() {
 
       if (isCorrect) {
         AudioManager.playSuccess();
-        const yesFeedback = [t("yesNo.yesCorrect"), t("yesNo.greatJob")];
-        const noFeedback = [t("yesNo.noCorrect"), t("yesNo.greatJob")];
+        // Only include the generic "great job" praise at end of the level
+        const isLastInRound = state.currentIndex === state.questions.length - 1;
+        const yesFeedback = isLastInRound ? [t("yesNo.yesCorrect"), t("yesNo.greatJob")] : [t("yesNo.yesCorrect")];
+        const noFeedback = isLastInRound ? [t("yesNo.noCorrect"), t("yesNo.greatJob")] : [t("yesNo.noCorrect")];
         const phrase =
           gesture === "yes"
             ? yesFeedback[Math.floor(Math.random() * yesFeedback.length)]

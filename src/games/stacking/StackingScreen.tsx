@@ -25,15 +25,19 @@ import { colors, spacing, borderRadius, fontSize } from "../../theme/colors";
 const { width, height } = Dimensions.get("window");
 const DEFAULT_GAME_AREA_HEIGHT = Math.round(height * 0.72);
 const BLOCK_HEIGHT_RATIO = 0.7;
+// Stack step: normal blocks use `BLOCK_HEIGHT_RATIO`, compact mode uses this smaller ratio
 const STACK_STEP_RATIO_COMPACT = 0.5;
 
 const getSpawnBottom = (
   gameAreaHeight: number,
   level: number,
   blockSize: number,
+  totalBlocks: number,
 ) => {
+  // Increase the vertical gap from the platform to the spawn area by ~50%
+  // (previously +300 from PLATFORM_BOTTOM -> now +450)
   const baseSpawn = Math.max(
-    PLATFORM_BOTTOM + 300,
+    PLATFORM_BOTTOM + 675,
     Math.round(gameAreaHeight * 0.82),
   );
 
@@ -42,16 +46,28 @@ const getSpawnBottom = (
   const postLevelSevenBoost =
     level >= 7 ? Math.min(160, 60 + (level - 7) * 24) : 0;
 
-  const desiredSpawn = baseSpawn + postLevelSevenBoost;
   const blockHeight = blockSize * BLOCK_HEIGHT_RATIO;
 
   // Keep the spawn inside the game area so touches remain reliable.
   const maxSpawnWithinArea = Math.max(
-    PLATFORM_BOTTOM + 220,
+    // also increase the maximum-safe spawn offset so the spawn stays well above the platform
+    PLATFORM_BOTTOM + 495,
     gameAreaHeight - blockHeight - 8,
   );
 
-  return Math.min(desiredSpawn, maxSpawnWithinArea);
+  // Compute the tower top *if stacked at the configured step* (no compression).
+  // We use that to ensure the spawn starts a comfortable distance above the tower.
+  const baseStackY = PLATFORM_BOTTOM + 40;
+  const configuredStackStep = blockSize * (level >= 7 ? STACK_STEP_RATIO_COMPACT : BLOCK_HEIGHT_RATIO);
+  const topTower = totalBlocks > 0 ? baseStackY + (totalBlocks - 1) * configuredStackStep : baseStackY;
+
+  // Minimum desired gap above the tower before spawning a new block.
+  // Use 1.5× block height to make the spawn clearly separated from the top block.
+  const minGap = Math.round(blockHeight * 1.5);
+
+  // Keep base spawn reasonable so smaller towers still spawn in view.
+  const desiredSpawnCandidate = Math.max(baseSpawn + postLevelSevenBoost, topTower + minGap);
+  return Math.min(desiredSpawnCandidate, maxSpawnWithinArea);
 };
 
 export default function StackingScreen() {
@@ -136,7 +152,18 @@ export default function StackingScreen() {
     };
   });
 
-  const spawnBottom = getSpawnBottom(gameAreaHeight, state.level, params.blockSize);
+  const spawnBottom = getSpawnBottom(
+    gameAreaHeight,
+    state.level,
+    params.blockSize,
+    state.blocks.length,
+  );
+
+  if (__DEV__) {
+    try {
+      console.log('[Stacking] spawnBottom', { spawnBottom, gameAreaHeight, level: state.level, totalBlocks: state.blocks.length, blockSize: params.blockSize });
+    } catch (e) {}
+  }
 
   const handleGameAreaLayout = (event: LayoutChangeEvent) => {
     const { height: nextHeight } = event.nativeEvent.layout;
@@ -190,7 +217,7 @@ export default function StackingScreen() {
             isPermissive={isPermissive}
             level={state.level}
             onSuccess={(x, y) =>
-              handleSuccess(index, x, y, platformX.value, height)
+              handleSuccess(index, x, y, platformX.value, height, state.blocks.length)
             }
             onError={handleError}
             prevBlockPos={
@@ -237,12 +264,13 @@ interface BlockProps {
   spawnBottom: number;
   isPermissive: boolean;
   level: number;
-  onSuccess: (x: number, y: number) => void;
+  onSuccess: (x: number, y: number, totalBlocks: number) => void;
   onError: () => void;
   prevBlockPos?: { x: number; y: number };
   setIsHolding: (h: boolean) => void;
   isHolding: boolean;
 }
+ 
 
 function StackingBlock({
   index,
@@ -264,7 +292,7 @@ function StackingBlock({
   const blockHeight = blockSize * BLOCK_HEIGHT_RATIO;
   const configuredStackStep =
     blockSize * (level >= 7 ? STACK_STEP_RATIO_COMPACT : BLOCK_HEIGHT_RATIO);
-  const baseStackY = PLATFORM_BOTTOM + 30;
+  const baseStackY = PLATFORM_BOTTOM + 40;
   const requiredClearance = level >= 7 ? 140 : 110;
   const maxStepForClearance =
     totalBlocks > 1
@@ -275,6 +303,21 @@ function StackingBlock({
     minCompressedStep,
     Math.min(configuredStackStep, maxStepForClearance),
   );
+
+    if (__DEV__) {
+      try {
+        console.log('[Stacking] block spacing', {
+          index,
+          configuredStackStep,
+          maxStepForClearance,
+          minCompressedStep,
+          stackStep,
+          spawnBottom,
+          baseStackY,
+          totalBlocks,
+        });
+      } catch (e) {}
+    }
 
   const translateX = useSharedValue(width / 2 - blockSize / 2);
   const translateY = useSharedValue(spawnBottom);
@@ -314,12 +357,11 @@ function StackingBlock({
       translateX.value = currentX;
       translateY.value = currentY;
 
-      if (isPermissive) {
+        if (isPermissive) {
         const dropXOffset = currentX - platformX.value;
         const absoluteY = currentY;
-
         let refXOffset = PLATFORM_WIDTH / 2 - blockSize / 2;
-        let refY = PLATFORM_BOTTOM + 30;
+        let refY = baseStackY;
         if (prevBlockPos) {
           refXOffset = prevBlockPos.x;
           refY = prevBlockPos.y + stackStep;
@@ -348,8 +390,8 @@ function StackingBlock({
       const dropXOffset = contextX.value + event.translationX - platformX.value;
       const dropY = contextY.value - event.translationY;
 
-      let refXOffset = PLATFORM_WIDTH / 2 - blockSize / 2;
-      let refY = PLATFORM_BOTTOM + 30;
+        let refXOffset = PLATFORM_WIDTH / 2 - blockSize / 2;
+        let refY = baseStackY;
       if (prevBlockPos) {
         refXOffset = prevBlockPos.x;
         refY = prevBlockPos.y + stackStep;
@@ -382,7 +424,7 @@ function StackingBlock({
         translateX.value = withSpring(targetXOffset);
         translateY.value = withSpring(targetY);
         rotation.value = withSpring(0);
-        runOnJS(onSuccess)(targetXOffset, targetY);
+        runOnJS(onSuccess)(targetXOffset, targetY, totalBlocks);
       } else {
         translateX.value = withSpring(width / 2 - blockSize / 2);
         translateY.value = withSpring(spawnBottom);
@@ -458,7 +500,7 @@ const styles = StyleSheet.create({
   gameArea: { flex: 1, position: "relative" },
   platform: {
     position: "absolute",
-    height: 30,
+    height: 44,
     backgroundColor: "#4ade80",
     borderRadius: 15,
     borderWidth: 3,
@@ -474,7 +516,7 @@ const styles = StyleSheet.create({
   },
   platformText: {
     color: "#064e3b",
-    fontSize: 10,
+    fontSize: 12,
     fontWeight: "800",
     letterSpacing: 1,
   },

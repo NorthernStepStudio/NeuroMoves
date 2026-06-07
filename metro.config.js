@@ -2,15 +2,41 @@ const { getDefaultConfig } = require('expo/metro-config');
 const path = require('path');
 
 const projectRoot = __dirname;
-const workspaceRoot = path.resolve(projectRoot, '../..');
+const defaultWorkspaceRoot = path.resolve(projectRoot, '../..');
+const workspaceRoot = process.env.NSTEP_METRO_WORKSPACE_ROOT
+  ? path.resolve(process.env.NSTEP_METRO_WORKSPACE_ROOT)
+  : defaultWorkspaceRoot;
 
 const config = getDefaultConfig(projectRoot);
 
-config.watchFolders = [workspaceRoot];
-config.resolver.nodeModulesPaths = [
+function samePath(left, right) {
+  return path.resolve(left).toLowerCase() === path.resolve(right).toLowerCase();
+}
+
+function uniquePaths(paths) {
+  const seen = new Set();
+  return paths.filter((value) => {
+    const key = path.resolve(value).toLowerCase();
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+const nodePathRoots = (process.env.NODE_PATH || '')
+  .split(path.delimiter)
+  .filter(Boolean)
+  .map((value) => path.resolve(value));
+
+config.watchFolders = uniquePaths([
+  samePath(workspaceRoot, projectRoot) ? null : workspaceRoot,
+  ...nodePathRoots,
+].filter(Boolean));
+config.resolver.nodeModulesPaths = uniquePaths([
   path.resolve(projectRoot, 'node_modules'),
   path.resolve(workspaceRoot, 'node_modules'),
-];
+  ...nodePathRoots,
+]);
 
 function escapePathForRegex(value) {
   const normalized = value.replace(/\\/g, '/');

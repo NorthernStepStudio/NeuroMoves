@@ -22,6 +22,20 @@ plugins {
   id("expo-autolinking-settings")
 }
 
+def nstepAutolinkingSearchPaths = []
+def nstepAutolinkingProjectRoot = System.getenv("NSTEP_AUTOLINKING_PROJECT_ROOT")
+def nstepNodePath = System.getenv("NODE_PATH")
+if (nstepAutolinkingProjectRoot != null && !nstepAutolinkingProjectRoot.trim().isEmpty()) {
+  expoAutolinking.projectRoot = new File(nstepAutolinkingProjectRoot).absoluteFile
+} else if (nstepNodePath != null && !nstepNodePath.trim().isEmpty()) {
+  nstepNodePath.split(File.pathSeparator).findAll { it?.trim() }.each {
+    nstepAutolinkingSearchPaths.add(new File(it).absolutePath)
+  }
+}
+if (!nstepAutolinkingSearchPaths.isEmpty()) {
+  expoAutolinking.searchPaths = nstepAutolinkingSearchPaths
+}
+
 extensions.configure(com.facebook.react.ReactSettingsExtension) { ex ->
   if (System.getenv('EXPO_USE_COMMUNITY_AUTOLINKING') == '1') {
     ex.autolinkLibrariesFromCommand()
