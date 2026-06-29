@@ -35,14 +35,16 @@ GOOGLE_CLIENT_IDS = [
 if GOOGLE_CLIENT_ID and GOOGLE_CLIENT_ID not in GOOGLE_CLIENT_IDS:
     GOOGLE_CLIENT_IDS.append(GOOGLE_CLIENT_ID)
 
-# AI Voice Configuration
-LOCAL_TTS_URL = os.environ.get("LOCAL_TTS_URL", "http://127.0.0.1:8888").strip("/")
+# AI Voice Configuration - Piper TTS EVA
+# Points to the Piper TTS Voice server which runs the local Piper engine.
+PIPER_TTS_URL = os.environ.get("PIPER_TTS_URL", "http://127.0.0.1:5002").strip("/")
+PIPER_TTS_VOICE_ID = "en-US-AvaNeural"
+PIPER_TTS_VOICE_NAME = "Ava"
+PIPER_TTS_VOICE_STYLE = "Natural, warm"
 AUDIO_CACHE_DIR = os.environ.get(
     "AUDIO_CACHE_DIR",
-    os.path.join(os.path.dirname(__file__), "..", "frontend", "assets", "audio", "cache"),
+    os.path.join(os.path.dirname(__file__), "audio-cache"),
 )
-ELEVENLABS_API_KEY = os.environ.get("ELEVENLABS_API_KEY", "") # Fallback/Legacy
-ELEVENLABS_VOICE_ID = "21m00Tcm4TlvDq8ikWAM"
 
 # AI Chat Configuration
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "")

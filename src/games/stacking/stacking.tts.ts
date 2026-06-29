@@ -23,17 +23,11 @@ const NUMBER_WORDS: Record<number, string> = {
 export async function speakStackingInstruction(prompt: string, options: TTSOptions = {}) {
   if (!prompt && prompt !== "0") return;
   const text = String(prompt).trim();
-  // If this is a numeric count, prefer local single-digit assets for 0-9,
-  // and speak words for 10+ so it is pronounced correctly ("ten" vs "one zero").
+  // Speak words for 10+ so EVA pronounces the count correctly ("ten" vs "one zero").
   if (/^\d+$/.test(text)) {
     const n = Number(text);
-    if (n >= 0 && n <= 9) {
-      await TTSManager.speak(text, { owner: STACKING_TTS_OWNER, shouldLock: false, ...options });
-      return;
-    }
-
     const word = NUMBER_WORDS[n] ?? text;
-    await TTSManager.speak(word, { owner: STACKING_TTS_OWNER, shouldLock: false, forceSystem: true, ...options });
+    await TTSManager.speak(word, { owner: STACKING_TTS_OWNER, shouldLock: false, ...options });
     return;
   }
 

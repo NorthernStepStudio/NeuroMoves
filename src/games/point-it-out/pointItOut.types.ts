@@ -2,7 +2,6 @@ export interface HiddenObject {
   id: string;
   name: string;
   emoji: string;
-  voiceFile: string;
   x: number; // percentage from left (CENTER)
   y: number; // percentage from top (CENTER)
   width: number; // hit-zone width percentage

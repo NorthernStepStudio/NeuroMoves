@@ -1,10 +1,5 @@
-import * as Speech from 'expo-speech';
 import * as ExpoAudio from 'expo-av';
-import * as FileSystem from 'expo-file-system';
-import { API_BASE_URL } from '../../services/ApiConfig';
-import i18n from '../../i18n';
-
-const CACHE_DIR = (FileSystem as any).documentDirectory ? `${(FileSystem as any).documentDirectory}audio_cache/` : '';
+import { getVoiceAsset } from '../../core/VoiceAssets';
 
 export interface TTSOptions {
     rate?: number;
@@ -14,16 +9,19 @@ export interface TTSOptions {
     shouldLock?: boolean;
     waitForCompletion?: boolean;
     debugLabel?: string;
+    shouldOnlyCache?: boolean;
     onStatusChange?: (isBusy: boolean) => void;
-    forceSystem?: boolean;
 }
 
 export class TTSManager {
     private static currentVoice: ExpoAudio.Audio.Sound | null = null;
     private static currentOwner: string | null = null;
     private static speakId = 0;
-    private static warmupController: AbortController | null = null;
     private static pendingCompletion: (() => void) | null = null;
+    private static activeSafetyTimeout: NodeJS.Timeout | null = null;
+    private static lastSpokenText: string | null = null;
+    private static lastSpokenTime = 0;
+
     // Queue to serialize TTS requests and enforce minimum spacing
     private static queue: Array<{
         text: string;
@@ -33,13 +31,10 @@ export class TTSManager {
     }> = [];
     private static processing = false;
     private static lastSpeakStart = 0; // timestamp ms of last speak start
-    private static MIN_GAP_MS = 2000;
+    private static MIN_GAP_MS = 1200; // Adjusted for better responsiveness
 
     static async ensureCacheDir() {
-        const info = await FileSystem.getInfoAsync(CACHE_DIR);
-        if (!info.exists) {
-            await FileSystem.makeDirectoryAsync(CACHE_DIR, { intermediates: true });
-        }
+        // No-op — all assets are bundled
     }
 
     static async stop(onStatusChange?: (isBusy: boolean) => void) {
@@ -50,17 +45,16 @@ export class TTSManager {
     }
 
     private static async stopInternal(onStatusChange?: (isBusy: boolean) => void) {
-        Speech.stop();
+        if (this.activeSafetyTimeout) {
+            clearTimeout(this.activeSafetyTimeout);
+            this.activeSafetyTimeout = null;
+        }
         if (this.currentVoice) {
             try {
                 await this.currentVoice.stopAsync();
                 await this.currentVoice.unloadAsync();
             } catch (e) {}
             this.currentVoice = null;
-        }
-        if (this.warmupController) {
-            this.warmupController.abort();
-            this.warmupController = null;
         }
         if (this.pendingCompletion) {
             this.pendingCompletion();
@@ -76,18 +70,73 @@ export class TTSManager {
         }
     }
 
+    /**
+     * No-op — assets are bundled, no preloading needed.
+     */
+    static async preloadCommonLines() {
+        console.log('[TTSManager] All voice assets are bundled — no preloading needed.');
+    }
+
+    /**
+     * Helper to play the game prompt/instruction safely
+     */
+    static async playGamePrompt(gameId: string, text: string, options: TTSOptions = {}) {
+        return this.speak(text, { owner: gameId, shouldLock: true, ...options });
+    }
+
+    /**
+     * Helper to play success narration safely
+     */
+    static async playSuccess(gameId: string, text?: string, options: TTSOptions = {}) {
+        const speechText = text || 'Great job!';
+        return this.speak(speechText, { owner: gameId, shouldLock: false, ...options });
+    }
+
+    /**
+     * Helper to play game completion narration safely
+     */
+    static async playFinish(gameId: string, text?: string, options: TTSOptions = {}) {
+        let defaultText = 'Congratulations!';
+        if (gameId === 'pop-bubbles') {
+            defaultText = 'All popped hurray!';
+        } else if (gameId === 'stacking') {
+            defaultText = 'Tower built!';
+        } else if (gameId === 'size-ordering') {
+            defaultText = 'Perfect order!';
+        } else if (gameId === 'shape-sorting') {
+            defaultText = 'Perfect fit!';
+        }
+        const speechText = text || defaultText;
+        return this.speak(speechText, { owner: gameId, shouldLock: false, ...options });
+    }
+
     static async speak(text: string, options: TTSOptions = {}) {
         if (!text) return;
         const speechText = String(text);
-        // Enqueue the request and process sequentially to enforce spacing
+
+        // Deduplicate identical speech requests within a 1000ms window
+        const now = Date.now();
+        if (speechText === this.lastSpokenText && (now - this.lastSpokenTime) < 1000) {
+            console.log(`[TTSManager] speak ignored (deduplicated): "${speechText}"`);
+            return Promise.resolve();
+        }
+        this.lastSpokenText = speechText;
+        this.lastSpokenTime = now;
+
+        // Background caching path — no-op for bundled assets
+        if (options.shouldOnlyCache) {
+            return;
+        }
+
+        // Enqueue interactive request
         return new Promise<void>((resolve, reject) => {
             this.queue.push({ text: speechText, options, resolve, reject });
-            // start processing if not already
-            if (!this.processing) this.processQueue().catch((err) => {
-                // clear queue on unexpected error
-                this.queue.forEach((q) => q.reject(err));
-                this.queue = [];
-            });
+            if (!this.processing) {
+                this.processQueue().catch((err) => {
+                    this.queue.forEach((q) => q.reject(err));
+                    this.queue = [];
+                });
+            }
         });
     }
 
@@ -98,7 +147,7 @@ export class TTSManager {
             const speechText = item.text;
             const options = item.options || {};
 
-            // Wait to enforce minimum gap between starts
+            // Enforce minimum gap spacing between starts to prevent overlapping
             const now = Date.now();
             const since = now - this.lastSpeakStart;
             if (since < this.MIN_GAP_MS) {
@@ -109,13 +158,7 @@ export class TTSManager {
             if (options.shouldLock) options.onStatusChange?.(true);
 
             try {
-                // Ensure any background warmup is aborted
-                if (this.warmupController) {
-                    this.warmupController.abort();
-                    this.warmupController = null;
-                }
-
-                // Stop any current audio before starting (don't clear the queue)
+                // Cancel previous voice before playing new voice
                 await this.stopInternal();
                 this.currentOwner = options.owner || null;
 
@@ -134,6 +177,10 @@ export class TTSManager {
                 const complete = () => {
                     if (didComplete) return;
                     didComplete = true;
+                    if (this.activeSafetyTimeout) {
+                        clearTimeout(this.activeSafetyTimeout);
+                        this.activeSafetyTimeout = null;
+                    }
                     if (this.pendingCompletion) {
                         const resolver = this.pendingCompletion;
                         this.pendingCompletion = null;
@@ -141,226 +188,87 @@ export class TTSManager {
                     }
                 };
 
-                if (options.debugLabel) {
-                    console.log(`[TTS] start ${options.debugLabel}`, { speechText, speakId: mySpeakId });
-                }
+                console.log(`[TTSManager] speak requested: "${speechText}"`);
 
-                const currentLang = i18n.language || 'en';
-                const volume = options.volume ?? 1.0;
+                // Look up the bundled MP3 asset for this text
+                const voiceAsset = getVoiceAsset(speechText);
+                let playedSuccessfully = false;
 
-                // If caller explicitly requests system TTS, use expo-speech directly
-                if (options.forceSystem) {
+                if (voiceAsset && mySpeakId === this.speakId) {
                     try {
-                        const speechLang = currentLang.split('-')[0] || 'en';
-                        Speech.speak(speechText, {
-                            language: speechLang,
-                            pitch: options.pitch ?? 1.0,
-                            rate: options.rate ?? 0.9,
-                            volume,
-                            onDone: () => {
-                                if (options.debugLabel && mySpeakId === this.speakId) {
-                                    console.log(`[TTS] end ${options.debugLabel}`, { speakId: mySpeakId });
-                                }
-                                if (options.shouldLock && mySpeakId === this.speakId) {
-                                    options.onStatusChange?.(false);
-                                }
-                                complete();
-                            },
-                            onError: () => {
-                                if (options.shouldLock && mySpeakId === this.speakId) {
-                                    options.onStatusChange?.(false);
-                                }
-                                complete();
-                            }
-                        });
-                        // mark start time immediately for system TTS
-                        this.lastSpeakStart = Date.now();
-                        if (waitForCompletion && completionPromise) {
-                            await completionPromise;
-                        }
-                        item.resolve();
-                        continue;
-                    } catch (err) {
-                        // fallback to other methods if system TTS fails
-                        item.resolve();
-                        continue;
+                        await this.playAudioFile(voiceAsset, options, complete);
+                        playedSuccessfully = true;
+                    } catch (playerError: any) {
+                        console.log(`[TTSManager] Playback failed: ${playerError.message || playerError}`);
                     }
+                } else if (!voiceAsset) {
+                    console.warn(`[TTSManager] No bundled MP3 found for: "${speechText}"`);
                 }
 
-                try {
-                    const { getVoiceAsset } = require('../../core/VoiceAssets');
-                    const assetData = getVoiceAsset(speechText);
-                    if (assetData) {
-                        const resolvedAsset = (assetData && assetData.asset) ? assetData.asset : assetData;
-                        const assetRate = (assetData && assetData.rate) ? assetData.rate : options.rate;
-                        const { sound } = await ExpoAudio.Audio.Sound.createAsync(resolvedAsset, { shouldPlay: false, volume });
-                        if (assetRate) {
-                            try { await sound.setRateAsync(assetRate, true); } catch (e) {}
-                        }
-                        if (mySpeakId !== this.speakId) {
-                            sound.unloadAsync();
-                            complete();
-                            item.resolve();
-                            continue;
-                        }
-                        this.currentVoice = sound;
-                        sound.setOnPlaybackStatusUpdate((status) => {
-                            if (!status.isLoaded) {
-                                complete();
-                                return;
-                            }
-                            if (status.didJustFinish) {
-                                sound.unloadAsync();
-                                if (this.currentVoice === sound) this.currentVoice = null;
-                                if (options.debugLabel && mySpeakId === this.speakId) {
-                                    console.log(`[TTS] end ${options.debugLabel}`, { speakId: mySpeakId });
-                                }
-                                if (options.shouldLock && mySpeakId === this.speakId) {
-                                    options.onStatusChange?.(false);
-                                }
-                                complete();
-                            }
-                        });
-                        await sound.playAsync();
-                        // mark start time as soon as playback started
-                        this.lastSpeakStart = Date.now();
-                        if (waitForCompletion && completionPromise) {
-                            await completionPromise;
-                        }
-                        item.resolve();
-                        continue;
-                    }
-                } catch (err) {
-                    console.warn('[TTSManager] Failed to load local asset', err);
+                if (!playedSuccessfully) {
+                    complete();
                 }
 
-                try {
-                    const controller = new AbortController();
-                    this.warmupController = controller;
-
-                    const timeoutId = setTimeout(() => controller.abort(), 3000);
-
-                    const response = await fetch(`${API_BASE_URL}/speak`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ text: speechText, language: currentLang }),
-                        signal: controller.signal
-                    });
-
-                    clearTimeout(timeoutId);
-
-                    if (response.ok && mySpeakId === this.speakId) {
-                        const data = await response.json();
-                        if (data.success && data.audio_url && mySpeakId === this.speakId) {
-                            const baseBackendUrl = API_BASE_URL.replace(/\/api$/, '');
-                            const filename = data.audio_url.split('/').pop();
-                            const localFile = `${CACHE_DIR}${filename}`;
-                            const fileInfo = await FileSystem.getInfoAsync(localFile);
-                            let finalUri = `${baseBackendUrl}${data.audio_url}`;
-
-                            if (!fileInfo.exists) {
-                                try {
-                                    await this.ensureCacheDir();
-                                    await FileSystem.downloadAsync(finalUri, localFile);
-                                    finalUri = localFile;
-                                } catch (e) {}
-                            } else {
-                                finalUri = localFile;
-                            }
-
-                            const { sound } = await ExpoAudio.Audio.Sound.createAsync(
-                                { uri: finalUri }, 
-                                { shouldPlay: false, volume }
-                            );
-                            const rateForUri = options.rate ?? (filename && filename.includes('neuromoves_movement_coach') ? 1.25 : undefined);
-                            if (rateForUri) {
-                                try { await sound.setRateAsync(rateForUri, true); } catch (e) {}
-                            }
-                            
-                            if (mySpeakId !== this.speakId) { 
-                                sound.unloadAsync(); 
-                                complete();
-                                item.resolve();
-                                continue; 
-                            }
-                            
-                            this.currentVoice = sound;
-                            sound.setOnPlaybackStatusUpdate((status) => {
-                                if (!status.isLoaded) {
-                                    complete();
-                                    return;
-                                }
-                                if (status.didJustFinish) {
-                                    sound.unloadAsync();
-                                    if (this.currentVoice === sound) this.currentVoice = null;
-                                    if (options.debugLabel && mySpeakId === this.speakId) {
-                                        console.log(`[TTS] end ${options.debugLabel}`, { speakId: mySpeakId });
-                                    }
-                                    if (options.shouldLock && mySpeakId === this.speakId) {
-                                        options.onStatusChange?.(false);
-                                    }
-                                    complete();
-                                }
-                            });
-                            await sound.playAsync();
-                            // mark start time
-                            this.lastSpeakStart = Date.now();
-                            if (waitForCompletion && completionPromise) {
-                                await completionPromise;
-                            }
-                            item.resolve();
-                            continue;
-                        }
-                    }
-                } catch (e) {
-                    // Fallback to system TTS
-                }
-
-                // System TTS Fallback
-                if (mySpeakId !== this.speakId) {
-                    item.resolve();
-                    continue;
+                if (waitForCompletion && completionPromise) {
+                    await completionPromise;
                 }
                 
-                try {
-                    const speechLang = currentLang.split('-')[0] || 'en';
-                    Speech.speak(speechText, {
-                        language: speechLang,
-                        pitch: options.pitch ?? 1.0,
-                        rate: options.rate ?? 0.9,
-                        volume,
-                        onDone: () => { 
-                            if (options.debugLabel && mySpeakId === this.speakId) {
-                                console.log(`[TTS] end ${options.debugLabel}`, { speakId: mySpeakId });
-                            }
-                            if (options.shouldLock && mySpeakId === this.speakId) {
-                                options.onStatusChange?.(false);
-                            } 
-                            complete();
-                        },
-                        onError: () => { 
-                            if (options.shouldLock && mySpeakId === this.speakId) {
-                                options.onStatusChange?.(false);
-                            } 
-                            complete();
-                        }
-                    });
-                    // mark start time immediately for system TTS
-                    this.lastSpeakStart = Date.now();
-                    if (waitForCompletion && completionPromise) {
-                        await completionPromise;
-                    }
-                    item.resolve();
-                } catch (err) {
-                    if (options.shouldLock && mySpeakId === this.speakId) options.onStatusChange?.(false);
-                    complete();
-                    item.resolve();
-                }
+                item.resolve();
             } catch (err) {
+                if (options.shouldLock && mySpeakId === this.speakId) options.onStatusChange?.(false);
                 item.reject(err);
             }
         }
-
         this.processing = false;
+    }
+
+    private static async playAudioFile(source: any, options: TTSOptions, completeCallback: () => void) {
+        const volume = options.volume ?? 1.0;
+        const sourceObject = typeof source === 'string' ? { uri: source } : source;
+
+        const { sound } = await ExpoAudio.Audio.Sound.createAsync(
+            sourceObject,
+            { shouldPlay: false, volume }
+        );
+
+        if (options.rate) {
+            try {
+                await sound.setRateAsync(options.rate, true);
+            } catch (e) {}
+        }
+
+        this.currentVoice = sound;
+
+        sound.setOnPlaybackStatusUpdate((status) => {
+            if (!status.isLoaded) {
+                completeCallback();
+                return;
+            }
+            if (status.didJustFinish) {
+                sound.unloadAsync();
+                if (this.currentVoice === sound) this.currentVoice = null;
+                console.log('[TTSManager] playback finished');
+                if (options.shouldLock) {
+                    options.onStatusChange?.(false);
+                }
+                completeCallback();
+            }
+        });
+
+        console.log('[TTSManager] playback started');
+        await sound.playAsync();
+        this.lastSpeakStart = Date.now();
+
+        // Safety timeout to unload and continue if playback hangs
+        const duration = (sound as any)._status?.durationMillis || 5000;
+        this.activeSafetyTimeout = setTimeout(() => {
+            console.warn('[TTSManager] Safety playback timeout triggered.');
+            sound.unloadAsync().catch(() => {});
+            if (this.currentVoice === sound) this.currentVoice = null;
+            if (options.shouldLock) {
+                options.onStatusChange?.(false);
+            }
+            completeCallback();
+        }, duration + 2000);
     }
 }

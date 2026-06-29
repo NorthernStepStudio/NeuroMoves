@@ -14,7 +14,6 @@ export function usePuzzleAudioManager() {
   };
 
   const playAnimalName = (name: string) => {
-    // Using the "yes thats a..." prefix to trigger human voice assets from VoiceAssets.ts
     speak(`yes thats a ${name.toLowerCase()}`, { shouldLock: true });
   };
 

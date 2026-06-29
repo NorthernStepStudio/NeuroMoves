@@ -28,6 +28,7 @@ from config import (
     RATE_LIMIT_AUTH,
     RATE_LIMIT_DEFAULT,
 )
+# Note: PIPER_TTS_URL is consumed internally by services.voice_service
 from core.constants import ENCOURAGEMENT_MESSAGES, LANGUAGES, MODULES
 from core.helpers import get_random_encouragement
 
@@ -697,7 +698,16 @@ def speak():
 
         audio_url = voice_service.generate_speech(text, language=language)
         if audio_url:
-            return jsonify({"success": True, "audio_url": audio_url})
+            from config import PIPER_TTS_VOICE_ID, PIPER_TTS_VOICE_NAME, PIPER_TTS_VOICE_STYLE
+            return jsonify({
+                "success": True,
+                "audio_url": audio_url,
+                "voice": {
+                    "id": PIPER_TTS_VOICE_ID,
+                    "name": PIPER_TTS_VOICE_NAME,
+                    "style": PIPER_TTS_VOICE_STYLE,
+                },
+            })
         return _json_error("Could not generate audio (check API key)", 500)
     except Exception as exc:
         return _json_error(str(exc), 500)

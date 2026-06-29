@@ -1,71 +1,66 @@
 """
 Voice Service Module
-Handles interaction with ElevenLabs API for high-quality TTS.
+
+Generates speech via the Piper TTS Voice server (en-US-AvaNeural voice).
+Audio is cached locally so repeated phrases are served instantly.
 """
 
 import os
 import hashlib
 import requests
-from config import AUDIO_CACHE_DIR, LOCAL_TTS_URL
+from config import AUDIO_CACHE_DIR, PIPER_TTS_URL, PIPER_TTS_VOICE_ID
 
 # Cache directory for audio files
 CACHE_DIR = AUDIO_CACHE_DIR
 os.makedirs(CACHE_DIR, exist_ok=True)
 
-def generate_speech(text, voice_id="hybrid", language="en"):
+
+def generate_speech(text, language="en"):
     """
-    Generate speech using the local Neural Studio TTS-app.
+    Generate speech using the Piper TTS EVA voice.
+
+    Calls the Piper TTS Voice server at PIPER_TTS_URL.
+    Returns a relative URL path to the cached audio file, or None on failure.
     """
     if not text:
         return None
 
-    # check cache first
-    text_hash = hashlib.md5(f"{text}_{voice_id}_{language}".encode()).hexdigest()
+    # Check cache first
+    text_hash = hashlib.md5(f"{text}_{PIPER_TTS_VOICE_ID}_{language}".encode()).hexdigest()
     filename = f"{text_hash}.mp3"
     filepath = os.path.join(CACHE_DIR, filename)
-    
-    # Relative path for frontend to access (neuromoves convention)
+
+    # Public asset path served by the backend cache route.
     relative_path = f"assets/audio/cache/{filename}"
 
     if os.path.exists(filepath):
         return relative_path
 
-    # Call Local TTS API
-    # Endpoint: POST /v1/synthesis
-    # Body: { text: "...", voice_id: "...", ... }
-    url = f"{LOCAL_TTS_URL}/v1/synthesis"
+    # Call the Piper TTS Voice server
+    # Endpoint: POST /api/v1/synthesize
+    # Body: { text: "...", voice: "en-US-AvaNeural" }
+    url = f"{PIPER_TTS_URL}/api/v1/synthesize"
     data = {
         "text": text,
-        "voice_id": voice_id,
-        "engine": "xtts",
-        "language": language
+        "voice": PIPER_TTS_VOICE_ID,
     }
     try:
-        # 1. Trigger synthesis
-        print(f"[Voice] Requesting synthesis from {url} for text: {text[:30]}...")
+        print(f"[Voice] Requesting EVA synthesis ({PIPER_TTS_VOICE_ID}) from {url} for text: {text[:50]}...")
         response = requests.post(url, json=data, timeout=30)
         response.raise_for_status()
-        result = response.json()
-        print(f"[Voice] Synthesis triggered. Result: {result}")
-        
-        # 2. Get the generated WAV URL
-        source_audio_url = result.get("url")
-        if not source_audio_url:
-            print("Error: TTS-app returned success but no URL")
+
+        audio_bytes = response.content
+        if not audio_bytes:
+            print("[Voice] Error: Piper TTS returned empty audio")
             return None
 
-        # 3. Download the actual audio data from the local TTS server
-        # The TTS server hosts its output folder at /output
-        audio_download_url = f"{LOCAL_TTS_URL}{source_audio_url}"
-        audio_response = requests.get(audio_download_url, timeout=10)
-        audio_response.raise_for_status()
-
-        # 4. Save to neuromoves cache
+        # Save to cache
         with open(filepath, "wb") as f:
-            f.write(audio_response.content)
-            
+            f.write(audio_bytes)
+
+        print(f"[Voice] EVA synthesis complete, cached as {filename}")
         return relative_path
 
     except Exception as e:
-        print(f"Error generating speech via local TTS ({LOCAL_TTS_URL}): {e}")
+        print(f"[Voice] Error generating speech via Piper TTS ({PIPER_TTS_URL}): {e}")
         return None

@@ -164,7 +164,7 @@ function LegalModal({ visible, title, content, onClose }: LegalModalProps) {
 
 export default function SettingsScreen() {
   const navigation = useNavigation<any>();
-  const { reloadSettings } = useGame();
+  const { reloadSettings, speak: speakTts } = useGame();
   const { selectedChild, logout } = useAuth();
   const [settings, setSettings] = useState<SettingsState>({
     childAgeMonths: 24,
@@ -448,6 +448,19 @@ export default function SettingsScreen() {
               />
             </View>
           </View>
+          <View style={styles.divider} />
+          <SettingRow
+            icon="🗣️"
+            title="Test Voice"
+            subtitle="Play a sample voice line"
+            onPress={async () => {
+              try {
+                await speakTts("Great job! Let's keep playing.");
+              } catch (e) {
+                Alert.alert("Error", "Could not play sample voice line.");
+              }
+            }}
+          />
         </View>
 
         {/* About */}
