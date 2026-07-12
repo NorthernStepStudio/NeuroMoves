@@ -1,6 +1,6 @@
 // Distance from the bottom of the screen to the platform.
 // Restored to original so vertical layout behaves consistently across devices.
-export const PLATFORM_BOTTOM = 64;
+export const PLATFORM_BOTTOM = 24;
 // Make the platform wider so blocks have more surface to land on
 export const PLATFORM_WIDTH = 340;
 

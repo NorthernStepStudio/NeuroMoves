@@ -2,7 +2,7 @@
 expo-network-fix.ps1
 
 Diagnose common Windows issues that prevent Expo/Metro from serving bundles to devices
-and optionally create Firewall rules + set the active Wi‑Fi network to Private. Run this as
+and optionally create Firewall rules + set the active Wi-Fi network to Private. Run this as
 Administrator to enable automatic fixes.
 
 Usage:
@@ -30,7 +30,7 @@ $ipv4 = Get-NetIPAddress -AddressFamily IPv4 -ErrorAction SilentlyContinue | Whe
 if (-not $ipv4) { Write-Output "(no IPv4 addresses found)" } else { $ipv4 | Format-Table -AutoSize }
 
 # Find likely active private interface
-$devIpEntry = $ipv4 | Where-Object { $_.IPAddress -like '192.168.*' -or $_.IPAddress -like '10.*' -or ($_ .IPAddress -like '172.*') } | Select-Object -First 1
+$devIpEntry = $ipv4 | Where-Object { $_.IPAddress -like '192.168.*' -or $_.IPAddress -like '10.*' -or ($_.IPAddress -like '172.*') } | Select-Object -First 1
 if ($devIpEntry) {
     $devIp = $devIpEntry.IPAddress
     $ifIndex = $devIpEntry.InterfaceIndex
@@ -48,10 +48,10 @@ if ($devIp -and $ifIndex) {
 
 # Check Metro/Expo ports
 Write-Output "\n-- Listening ports (common Expo/Metro ports) --"
-$ports = @(19000,19001,8081,8083)
+$ports = @(19000,19001,8081,8083,5000)
 foreach ($p in $ports) {
     $lines = netstat -aon | findstr ":$p"
-    if ($lines) { Write-Output "Port $p:"; $lines } else { Write-Output "Port $p: no matching listeners" }
+    if ($lines) { Write-Output "Port $($p):"; $lines } else { Write-Output "Port $($p): no matching listeners" }
 }
 
 # Find node executable path if available
@@ -70,7 +70,7 @@ if (-not (Is-Administrator)) {
     exit 0
 }
 
-Write-Output "\nRunning with Administrator privileges — offering automatic fixes." 
+Write-Output "\nRunning with Administrator privileges - offering automatic fixes." 
 
 # If interface profile is not Private, offer to set it
 if ($devIp -and $ifIndex) {
@@ -94,7 +94,7 @@ if ($devIp -and $ifIndex) {
 
 # Create firewall rules for node and Expo ports
 $ruleNameNode = 'Allow Node (Expo)'
-$ruleNamePorts = 'Allow Expo Ports (19000-19001,8081,8083)'
+$ruleNamePorts = 'Allow Expo/TTS Ports (19000-19001,8081,8083,5000)'
 
 if (-not (Get-NetFirewallRule -DisplayName $ruleNameNode -ErrorAction SilentlyContinue)) {
     $do = $AutoYes -or (Read-Host "Create inbound firewall rule to allow node.exe for Private profile? (y/n)") -eq 'y'
@@ -109,10 +109,10 @@ if (-not (Get-NetFirewallRule -DisplayName $ruleNameNode -ErrorAction SilentlyCo
 } else { Write-Output "Firewall rule '$ruleNameNode' already exists." }
 
 if (-not (Get-NetFirewallRule -DisplayName $ruleNamePorts -ErrorAction SilentlyContinue)) {
-    $do = $AutoYes -or (Read-Host "Create inbound firewall rule to allow Expo ports (19000-19001,8081,8083)? (y/n)") -eq 'y'
+    $do = $AutoYes -or (Read-Host "Create inbound firewall rule to allow Expo/TTS ports (19000-19001,8081,8083,5000)? (y/n)") -eq 'y'
     if ($do) {
         try {
-            New-NetFirewallRule -DisplayName $ruleNamePorts -Direction Inbound -LocalPort '19000-19001,8081,8083' -Protocol TCP -Action Allow -Profile Private
+            New-NetFirewallRule -DisplayName $ruleNamePorts -Direction Inbound -LocalPort '19000-19001,8081,8083,5000' -Protocol TCP -Action Allow -Profile Private
             Write-Output "Created firewall rule: $ruleNamePorts"
         } catch {
             Write-Output "Failed to create ports firewall rule: $_"
@@ -121,7 +121,7 @@ if (-not (Get-NetFirewallRule -DisplayName $ruleNamePorts -ErrorAction SilentlyC
 } else { Write-Output "Firewall rule '$ruleNamePorts' already exists." }
 
 Write-Output "\nFinished. Recommended next steps:" 
-Write-Output "- Ensure your development device is on the same Wi‑Fi network (not a guest network)."
+Write-Output "- Ensure your development device is on the same Wi-Fi network (not a guest network)."
 Write-Output "- Disable VPNs while testing (they can interfere)."
 Write-Output "- Start the project with 'npm start' (the workspace start script forces '--tunnel')."
 Write-Output "- If problems persist, collect the red-overlay 'Copy' text from the device and paste here."

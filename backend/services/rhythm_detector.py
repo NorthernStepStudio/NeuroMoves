@@ -3,7 +3,7 @@ Module C: Baby Signs - Rhythm Detector
 Detects taps matching video timing for sign language practice
 """
 
-from config import MAX_ATTEMPTS_BEFORE_HINT
+from core.constants import MAX_ATTEMPTS_BEFORE_HINT
 
 
 class RhythmDetector:

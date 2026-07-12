@@ -55,7 +55,7 @@ export const QUESTIONS: Question[][] = [
     { text: "Is fire hot?", answer: "yes", color: "#ef4444", emoji: "🔥" },
     { text: "Is a rock soft?", answer: "no", color: "#57534e", emoji: "🪨" },
     { text: "Is candy sweet?", answer: "yes", color: "#ec4899", emoji: "🍬" },
-    { text: "Do clean cars fly?", answer: "no", color: "#2563eb", emoji: "🚗" },
+    { text: "Do cars fly?", answer: "no", color: "#2563eb", emoji: "🚗" },
     { text: "Is rain dry?", answer: "no", color: "#3b82f6", emoji: "🌧️" },
   ],
 ];

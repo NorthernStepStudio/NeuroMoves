@@ -5,9 +5,9 @@ const path = require('path');
 function fail(msg) { console.error(msg); process.exitCode = 2; }
 
 const repoRoot = path.resolve(__dirname, '..');
-const voiceAssetsPath = path.resolve(repoRoot, 'src', 'core', 'VoiceAssets.ts');
+const voiceAssetsPath = path.resolve(repoRoot, 'src', 'audio', 'tts', 'evaVoiceRegistry.ts');
 if (!fs.existsSync(voiceAssetsPath)) {
-  fail(`VoiceAssets file not found at ${voiceAssetsPath}`);
+  fail(`evaVoiceRegistry file not found at ${voiceAssetsPath}`);
   process.exit(2);
 }
 

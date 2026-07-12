@@ -222,7 +222,7 @@ export class SyncService {
           console.error(
             `[SyncService] Network request failed for ${API_BASE_URL}. ` +
             'Set EXPO_PUBLIC_API_BASE_URL when testing on a physical device ' +
-            '(example: http://192.168.1.42:5000/api).'
+            '(example: http://YOUR-LAN-IP:5000/api).'
           );
         }
       }

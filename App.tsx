@@ -12,7 +12,7 @@ import LanguageGateScreen from './src/screens/LanguageGateScreen';
 import { I18nextProvider } from 'react-i18next';
 import i18n from './src/i18n';
 import { SubscriptionService } from './src/services/SubscriptionService';
-import * as Sentry from '@sentry/react-native';
+import { Sentry } from './src/services/SentryService';
 
 Sentry.init({
   dsn: process.env.EXPO_PUBLIC_SENTRY_DSN,
@@ -24,7 +24,7 @@ SplashScreen.preventAutoHideAsync().catch(() => { });
 
 const LANGUAGE_SELECTION_KEY = '@neuromoves_language_selected';
 const LANGUAGE_CODE_KEY = '@neuromoves_language';
-export type LanguageCode = 'en' | 'es' | 'it';
+type LanguageCode = 'en' | 'es' | 'it';
 
 const normalizeLanguage = (value: string | null | undefined): LanguageCode => {
   if (!value) {

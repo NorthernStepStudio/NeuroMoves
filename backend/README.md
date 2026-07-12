@@ -37,8 +37,6 @@ Non-secret runtime values belong in `cloud-run.env.yaml`:
 ```yaml
 DEBUG: "False"
 ALLOWED_ORIGINS: https://your-app-domain.example
-AUDIO_CACHE_DIR: /tmp/neuromoves-audio-cache
-LOCAL_TTS_URL: https://your-tts-service.example
 ```
 
 ### Deploy
@@ -62,5 +60,4 @@ Useful flags:
 ## Production notes
 
 - Do not use the SQLite fallback on Cloud Run because that filesystem is ephemeral.
-- `/api/speak` still depends on a reachable TTS service via `LOCAL_TTS_URL`.
-- Audio cache files are now configurable and should live in `/tmp` on Cloud Run.
+- Runtime TTS synthesis is retired. NeuroMoves gameplay uses bundled EVA audio assets and works without a TTS server.

@@ -14,11 +14,14 @@ import {
   FeedbackOverlay,
 } from "../../components/GameComponents";
 import { useAnimalSoundsGame } from "./animalSounds.logic";
+import { useGame } from "../../core/GameContext";
 import { colors, spacing } from "../../theme/colors";
 
 const { width } = Dimensions.get("window");
 
 export default function AnimalSoundsScreen() {
+  const { settings } = useGame();
+  const childAgeMonths = settings?.childAgeMonths ?? 48;
   const {
     state,
     optionsCount,
@@ -26,7 +29,7 @@ export default function AnimalSoundsScreen() {
     handleAnimalPress,
     handleRestart,
     generateRound,
-  } = useAnimalSoundsGame(48); // Configurable via settings context normally
+  } = useAnimalSoundsGame(childAgeMonths);
 
   const soundPulse = useRef(new Animated.Value(1)).current;
 

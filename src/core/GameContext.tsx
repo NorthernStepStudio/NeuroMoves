@@ -169,7 +169,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
     const playSuccess = useCallback(async () => {
         if (settings?.sfxMuted || settings?.audioMuted) return;
         try {
-            const { sound } = await ExpoAudio.Audio.Sound.createAsync(require('../../assets/sounds/success.mp3'), { volume: settings?.sfxVolume ?? 1.0 });
+            const { sound } = await ExpoAudio.Audio.Sound.createAsync(require('../../assets/sounds/success_v2.mp3'), { volume: settings?.sfxVolume ?? 1.0 });
             await sound.playAsync();
             sound.setOnPlaybackStatusUpdate((s: AVPlaybackStatus) => { if (s.isLoaded && s.didJustFinish) sound.unloadAsync(); });
         } catch (e) { Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success); }

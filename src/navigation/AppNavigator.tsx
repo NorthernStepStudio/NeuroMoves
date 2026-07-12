@@ -31,7 +31,7 @@ import { GAME_REGISTRY } from "../systems/game/gameRegistry";
 
 import MomentsGallery from "../screens/MomentsGallery";
 
-const DisabledGameScreen = ({ route, navigation }: any) => {
+const DisabledGameScreen = ({ navigation }: any) => {
   return (
     <View style={disabledStyles.disabledContainer}>
       <Text style={disabledStyles.disabledTitle}>🚧 Coming Soon</Text>
@@ -59,7 +59,7 @@ const disabledStyles = StyleSheet.create({
 
 type ChildProfilesParams = { requiredSetup?: boolean } | undefined;
 
-export type RootStackParamList = {
+type RootStackParamList = {
   Tabs: undefined;
   ActivityDetail: { activityId: string };
   ColorMatchGame: undefined;

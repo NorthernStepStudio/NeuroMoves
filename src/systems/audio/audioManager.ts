@@ -20,7 +20,7 @@ export class AudioManager {
 
     static async playSuccess(volume = 1.0) {
         try {
-            await this.playAsset(require('../../../assets/sounds/success.mp3'), volume);
+            await this.playAsset(require('../../../assets/sounds/success_v2.mp3'), volume);
         } catch(e) {
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         }

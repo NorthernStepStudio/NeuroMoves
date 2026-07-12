@@ -11,7 +11,7 @@ from dotenv import load_dotenv
 
 load_dotenv() # Load variables from .env if present
 
-from flask import Flask, g, jsonify, request, send_from_directory
+from flask import Flask, g, jsonify, request
 from flask_cors import CORS
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
@@ -19,7 +19,6 @@ from flask_limiter.util import get_remote_address
 import database
 from config import (
     ALLOWED_ORIGINS,
-    AUDIO_CACHE_DIR,
     DEBUG,
     GOOGLE_CLIENT_IDS,
     GROQ_API_KEY,
@@ -28,7 +27,6 @@ from config import (
     RATE_LIMIT_AUTH,
     RATE_LIMIT_DEFAULT,
 )
-# Note: PIPER_TTS_URL is consumed internally by services.voice_service
 from core.constants import ENCOURAGEMENT_MESSAGES, LANGUAGES, MODULES
 from core.helpers import get_random_encouragement
 
@@ -693,29 +691,11 @@ def speak():
     if not text:
         return _json_error("No text provided", 400)
 
-    try:
-        from services import voice_service
-
-        audio_url = voice_service.generate_speech(text, language=language)
-        if audio_url:
-            from config import PIPER_TTS_VOICE_ID, PIPER_TTS_VOICE_NAME, PIPER_TTS_VOICE_STYLE
-            return jsonify({
-                "success": True,
-                "audio_url": audio_url,
-                "voice": {
-                    "id": PIPER_TTS_VOICE_ID,
-                    "name": PIPER_TTS_VOICE_NAME,
-                    "style": PIPER_TTS_VOICE_STYLE,
-                },
-            })
-        return _json_error("Could not generate audio (check API key)", 500)
-    except Exception as exc:
-        return _json_error(str(exc), 500)
-
-
-@app.route("/assets/audio/cache/<path:filename>")
-def serve_audio_cache(filename):
-    return send_from_directory(AUDIO_CACHE_DIR, filename)
+    return jsonify({
+        "success": False,
+        "error": "Runtime TTS synthesis is retired. NeuroMoves uses bundled EVA audio assets.",
+        "language": language,
+    }), 410
 
 
 # ========== Data Export / Account Deletion (COPPA/GDPR) ==========

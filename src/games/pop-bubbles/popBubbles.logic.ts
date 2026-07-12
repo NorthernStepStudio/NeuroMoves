@@ -185,7 +185,7 @@ export function usePopBubblesGame(
 
       setTimeout(() => {
         generateRound(state.level + 1);
-      }, 2500);
+      }, 3800);
     }
   }, [
     state.poppedCount,

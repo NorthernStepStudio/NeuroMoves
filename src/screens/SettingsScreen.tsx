@@ -455,7 +455,7 @@ export default function SettingsScreen() {
             subtitle="Play a sample voice line"
             onPress={async () => {
               try {
-                await speakTts("Great job! Let's keep playing.");
+                await speakTts("Great job!");
               } catch (e) {
                 Alert.alert("Error", "Could not play sample voice line.");
               }

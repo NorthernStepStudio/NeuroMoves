@@ -30,6 +30,10 @@
         "greatJob": "Great Job!",
         "awesomeText": "Awesome!",
         "tryAgainText": "Try again",
+        "tryAgain": "Try again",
+        "yesCorrect": "Yes! Correct!",
+        "noCorrect": "No! Correct!",
+        "oopsTryAgain": "Oops! Try again.",
         "wrongNumberText": "No, that's not {{number}}",
         "wrongYesText": "Oops, that was incorrect.",
         "wrongNoText": "Oops, that actually was {{number}}."
@@ -63,7 +67,7 @@
     },
     "stacking": {
         "title": "Stacking",
-        "instruction": "Stack the blocks!",
+        "instruction": "Build it high!",
         "subtitle": "Build it high!",
         "parentStart": "Encourage them to stack the blocks carefully directly on top of each other.",
         "parentStruggle": "You can help by stabilizing their hand or pointing to the center.",
@@ -143,14 +147,49 @@
     "pointItOut": {
         "title": "Point It Out",
         "instruction": "Find the {{object}}",
+        "findCommand": "Find the {{object}}",
         "successMessage": "You found it!",
-        "tryAgain": "Try again!"
+        "tryAgain": "Try again!",
+        "foundIt": "You found it!",
+        "allFound": "You found them all!",
+        "objects": {
+            "lr_car": "red car",
+            "lr_teddy": "teddy bear",
+            "lr_apple": "green apple",
+            "lr_ball": "red ball",
+            "lr_book": "blue book",
+            "k_banana": "yellow banana",
+            "k_cup": "blue cup",
+            "k_spoon": "white spoon",
+            "k_jar": "cookie jar",
+            "b_robot": "toy robot",
+            "b_flashlight": "flashlight",
+            "b_slippers": "slippers",
+            "b_pillow": "star pillow",
+            "p_block": "purple block",
+            "p_airplane": "toy airplane",
+            "p_top": "spinning top",
+            "p_ball": "colorful ball",
+            "g_watering_can": "watering can",
+            "g_trowel": "garden trowel",
+            "g_ladybug": "ladybug",
+            "g_hat": "sun hat",
+            "bath_duck": "yellow duck",
+            "bath_brush": "blue toothbrush",
+            "bath_shampoo": "green shampoo bottle",
+            "bath_towel": "blue towel",
+            "gar_bike": "red bicycle",
+            "gar_tools": "blue tool box",
+            "gar_ball": "soccer ball",
+            "gar_box": "cardboard box"
+        }
     },
     "shapeSorting": {
         "title": "Shape Sorting",
         "instruction": "Drag the shapes to their holes",
+        "perfect": "Perfect fit!",
         "successMessage": "Great job!",
-        "tryAgain": "Keep trying"
+        "tryAgain": "Not that one."
     },
     "babySigns": {
         "title": "Baby Signs",
@@ -158,7 +197,19 @@
     },
     "emotions": {
         "title": "Emotions",
-        "instruction": "Who is feeling {{emotion}}?"
+        "instruction": "Who is feeling {{emotion}}?",
+        "list": {
+            "happy": "happy",
+            "sad": "sad",
+            "angry": "angry",
+            "surprised": "surprised",
+            "scared": "scared",
+            "sleepy": "sleepy",
+            "silly": "silly",
+            "loving": "loving"
+        },
+        "successMessage": "Yes, that is {{emotion}}",
+        "tryAgain": "Try again"
     },
     "bodyParts": {
         "title": "Body Parts",
@@ -170,7 +221,9 @@
     },
     "sizeOrdering": {
         "title": "Size Ordering",
-        "instruction": "Arrange by size"
+        "instruction": "Tap items smallest to largest",
+        "perfectOrder": "Perfect order!",
+        "tryAgainMessage": "Try smallest to largest"
     },
     "animalMatch": {
         "title": "Animal Match",

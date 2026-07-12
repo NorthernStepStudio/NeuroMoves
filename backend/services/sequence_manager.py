@@ -3,7 +3,7 @@ Module A: Magic Fingers - Sequence Manager
 Tracks finger counting sequences (1 -> 2 -> 3)
 """
 
-from config import MODULES, MAX_ATTEMPTS_BEFORE_HINT
+from core.constants import MODULES, MAX_ATTEMPTS_BEFORE_HINT
 
 
 class SequenceManager:

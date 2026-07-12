@@ -19,6 +19,7 @@ import { GameShell } from "../../systems/game/GameShell";
 import { FeedbackOverlay } from "../../components/GameComponents";
 import { FloatingFeedback } from "../../components/FloatingFeedback";
 import { useStackingGame } from "./stacking.logic";
+import { useGame } from "../../core/GameContext";
 import { PLATFORM_BOTTOM, PLATFORM_WIDTH } from "./stacking.config";
 import { colors, spacing, borderRadius, fontSize } from "../../theme/colors";
 
@@ -72,6 +73,9 @@ const getSpawnBottom = (
 
 export default function StackingScreen() {
   const { t } = useTranslation();
+  const { settings } = useGame();
+  const childAgeMonths = settings?.childAgeMonths ?? 48;
+  const parentModeEnabled = settings?.parentModeEnabled ?? false;
   const [gameAreaHeight, setGameAreaHeight] = useState(DEFAULT_GAME_AREA_HEIGHT);
   const {
     state,
@@ -86,7 +90,7 @@ export default function StackingScreen() {
     handleError,
     removeFloatingLabel,
     handleRestart,
-  } = useStackingGame(48, false); // Pass childAgeMonths and parentModeEnabled appropriately from context if needed
+  } = useStackingGame(childAgeMonths, parentModeEnabled);
 
   const platformX = useSharedValue(width / 2 - PLATFORM_WIDTH / 2);
 
@@ -159,11 +163,7 @@ export default function StackingScreen() {
     state.blocks.length,
   );
 
-  if (__DEV__) {
-    try {
-      console.log('[Stacking] spawnBottom', { spawnBottom, gameAreaHeight, level: state.level, totalBlocks: state.blocks.length, blockSize: params.blockSize });
-    } catch (e) {}
-  }
+
 
   const handleGameAreaLayout = (event: LayoutChangeEvent) => {
     const { height: nextHeight } = event.nativeEvent.layout;
@@ -293,7 +293,7 @@ function StackingBlock({
   const configuredStackStep =
     blockSize * (level >= 7 ? STACK_STEP_RATIO_COMPACT : BLOCK_HEIGHT_RATIO);
   const baseStackY = PLATFORM_BOTTOM + 40;
-  const requiredClearance = level >= 7 ? 140 : 110;
+  const requiredClearance = level >= 7 ? 170 : 140;
   const maxStepForClearance =
     totalBlocks > 1
       ? (spawnBottom - requiredClearance - baseStackY) / (totalBlocks - 1)
@@ -304,20 +304,7 @@ function StackingBlock({
     Math.min(configuredStackStep, maxStepForClearance),
   );
 
-    if (__DEV__) {
-      try {
-        console.log('[Stacking] block spacing', {
-          index,
-          configuredStackStep,
-          maxStepForClearance,
-          minCompressedStep,
-          stackStep,
-          spawnBottom,
-          baseStackY,
-          totalBlocks,
-        });
-      } catch (e) {}
-    }
+
 
   const translateX = useSharedValue(width / 2 - blockSize / 2);
   const translateY = useSharedValue(spawnBottom);

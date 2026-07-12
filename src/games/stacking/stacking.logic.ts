@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import * as Haptics from "expo-haptics";
 import { StackingGameState, BlockData } from "./stacking.types";
 import { DIFFICULTY_CONFIG, BLOCK_COLORS } from "./stacking.config";
-import { speakStackingInstruction, stopStackingTTS } from "./stacking.tts";
+import { speakStackingInstruction, stopStackingTTS, preloadStackingSounds } from "./stacking.tts";
 import { AudioManager } from "../../systems/audio/audioManager";
 import { useGame } from "../../core/GameContext";
 
@@ -75,10 +75,8 @@ export function useStackingGame(
 
   const generateRound = useCallback(
     (level: number) => {
-      try { console.log('[Stacking] generateRound called', { level }); } catch (e) {}
       const initialBlocks: BlockData[] = [];
       const blocksForRound = getBlocksForLevel(level);
-      try { console.log('[Stacking] blocksForRound', { level, blocksForRound }); } catch (e) {}
       for (let i = 0; i < blocksForRound; i++) {
         initialBlocks.push({
           id: blockIdRef.current++,
@@ -113,6 +111,7 @@ export function useStackingGame(
   }, [generateRound]);
 
   useEffect(() => {
+    preloadStackingSounds().catch((e) => console.warn("[Stacking] preloading failed", e));
     generateRound(1);
     return () => {
       stopStackingTTS();
@@ -159,12 +158,10 @@ export function useStackingGame(
           speakStackingInstruction(blocksForRound.toString(), { waitForCompletion: false, debugLabel: 'stack-final-count' }).catch(() => {});
         } catch (e) {}
 
-        // Log for debugging
-        try { console.log('[Stacking] final block placed', { level: state.level, blocksForRound, idx }); } catch (e) {}
+
 
         // Schedule success feedback shortly after the count starts (timeout ensures we don't block forever)
         const nextLevel = state.level + 1;
-        try { console.log('[Stacking] scheduling nextLevel', { nextLevel }); } catch (e) {}
         // Wait slightly longer (around TTS gap) so spoken count finishes before success sound
         setTimeout(() => {
           try { AudioManager.playSuccess(); } catch (e) {}
@@ -181,7 +178,6 @@ export function useStackingGame(
 
         // Advance to next level after a short pause
         setTimeout(() => {
-          try { console.log('[Stacking] invoking generateRound for nextLevel', { nextLevel }); } catch (e) {}
           try { generateRound(nextLevel); } catch (e) { console.warn('[Stacking] generateRound failed', e); }
         }, 4200);
       } else {

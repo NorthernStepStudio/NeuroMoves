@@ -3,7 +3,7 @@ Module B: Point It Out - Hidden Object Logic
 Manages hidden object discovery in photorealistic scenes
 """
 
-from config import MAX_ATTEMPTS_BEFORE_HINT
+from core.constants import MAX_ATTEMPTS_BEFORE_HINT
 import random
 
 

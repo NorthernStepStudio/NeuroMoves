@@ -1,5 +1,6 @@
 import * as ExpoAudio from 'expo-av';
-import { getVoiceAsset } from '../../core/VoiceAssets';
+import { resolveEvaVoiceId } from '../../audio/tts/evaVoiceResolver';
+import { EVA_VOICE_REGISTRY } from '../../audio/tts/evaVoiceRegistry';
 
 export interface TTSOptions {
     rate?: number;
@@ -21,6 +22,7 @@ export class TTSManager {
     private static activeSafetyTimeout: NodeJS.Timeout | null = null;
     private static lastSpokenText: string | null = null;
     private static lastSpokenTime = 0;
+    private static preloadedSounds = new Map<string, ExpoAudio.Audio.Sound>();
 
     // Queue to serialize TTS requests and enforce minimum spacing
     private static queue: Array<{
@@ -52,7 +54,10 @@ export class TTSManager {
         if (this.currentVoice) {
             try {
                 await this.currentVoice.stopAsync();
-                await this.currentVoice.unloadAsync();
+                const isPreloaded = Array.from(this.preloadedSounds.values()).includes(this.currentVoice);
+                if (!isPreloaded) {
+                    await this.currentVoice.unloadAsync();
+                }
             } catch (e) {}
             this.currentVoice = null;
         }
@@ -67,6 +72,21 @@ export class TTSManager {
     static async stopByOwner(owner: string) {
         if (this.currentOwner === owner) {
             await this.stop();
+        }
+    }
+
+    static async preloadVoiceIds(voiceIds: string[]) {
+        for (const voiceId of voiceIds) {
+            const voiceAsset = EVA_VOICE_REGISTRY[voiceId as keyof typeof EVA_VOICE_REGISTRY];
+            if (voiceAsset && !this.preloadedSounds.has(voiceId)) {
+                try {
+                    const { sound } = await ExpoAudio.Audio.Sound.createAsync(voiceAsset, { shouldPlay: false });
+                    this.preloadedSounds.set(voiceId, sound);
+                    console.log(`[TTSManager] Preloaded voice: ${voiceId}`);
+                } catch (e) {
+                    console.warn(`[TTSManager] Failed to preload ${voiceId}`, e);
+                }
+            }
         }
     }
 
@@ -96,13 +116,13 @@ export class TTSManager {
      * Helper to play game completion narration safely
      */
     static async playFinish(gameId: string, text?: string, options: TTSOptions = {}) {
-        let defaultText = 'Congratulations!';
+        let defaultText = 'You finished!';
         if (gameId === 'pop-bubbles') {
-            defaultText = 'All popped hurray!';
+            defaultText = 'All popped! Hurray!';
         } else if (gameId === 'stacking') {
             defaultText = 'Tower built!';
         } else if (gameId === 'size-ordering') {
-            defaultText = 'Perfect order!';
+            defaultText = 'Perfect... order!';
         } else if (gameId === 'shape-sorting') {
             defaultText = 'Perfect fit!';
         }
@@ -148,10 +168,11 @@ export class TTSManager {
             const options = item.options || {};
 
             // Enforce minimum gap spacing between starts to prevent overlapping
+            const minGap = options.owner === 'stacking' ? 600 : this.MIN_GAP_MS;
             const now = Date.now();
             const since = now - this.lastSpeakStart;
-            if (since < this.MIN_GAP_MS) {
-                await new Promise((r) => setTimeout(r, this.MIN_GAP_MS - since));
+            if (since < minGap) {
+                await new Promise((r) => setTimeout(r, minGap - since));
             }
 
             const mySpeakId = ++this.speakId;
@@ -190,19 +211,74 @@ export class TTSManager {
 
                 console.log(`[TTSManager] speak requested: "${speechText}"`);
 
-                // Look up the bundled MP3 asset for this text
-                const voiceAsset = getVoiceAsset(speechText);
+                const voiceId = resolveEvaVoiceId(speechText);
                 let playedSuccessfully = false;
 
-                if (voiceAsset && mySpeakId === this.speakId) {
-                    try {
-                        await this.playAudioFile(voiceAsset, options, complete);
-                        playedSuccessfully = true;
-                    } catch (playerError: any) {
-                        console.log(`[TTSManager] Playback failed: ${playerError.message || playerError}`);
+                if (voiceId && mySpeakId === this.speakId) {
+                    console.log(`[TTSManager] EVA voice resolved: ${voiceId}`);
+                    
+                    const preloadedSound = this.preloadedSounds.get(voiceId);
+                    if (preloadedSound) {
+                        try {
+                            console.log(`[TTSManager] Playing preloaded EVA asset`);
+                            this.currentVoice = preloadedSound;
+                            await preloadedSound.setPositionAsync(0);
+                            await preloadedSound.setVolumeAsync(options.volume ?? 1.0);
+                            
+                            if (options.rate) {
+                                try {
+                                    await preloadedSound.setRateAsync(options.rate, true);
+                                } catch (e) {}
+                            }
+
+                            preloadedSound.setOnPlaybackStatusUpdate((status) => {
+                                if (!status.isLoaded) {
+                                    complete();
+                                    return;
+                                }
+                                if (status.didJustFinish) {
+                                    if (this.currentVoice === preloadedSound) this.currentVoice = null;
+                                    console.log('[TTSManager] Preloaded EVA playback finished');
+                                    if (options.shouldLock) {
+                                        options.onStatusChange?.(false);
+                                    }
+                                    complete();
+                                }
+                            });
+
+                            await preloadedSound.playAsync();
+                            this.lastSpeakStart = Date.now();
+                            playedSuccessfully = true;
+
+                            // Setup safety timeout
+                            const duration = (preloadedSound as any)._status?.durationMillis || 5000;
+                            this.activeSafetyTimeout = setTimeout(() => {
+                                console.warn('[TTSManager] Safety playback timeout triggered for preloaded sound.');
+                                preloadedSound.stopAsync().catch(() => {});
+                                if (this.currentVoice === preloadedSound) this.currentVoice = null;
+                                if (options.shouldLock) {
+                                    options.onStatusChange?.(false);
+                                }
+                                complete();
+                            }, duration + 2000);
+                        } catch (playerError: any) {
+                            console.log(`[TTSManager] Preloaded playback failed: ${playerError.message || playerError}`);
+                        }
+                    } else {
+                        const voiceAsset = EVA_VOICE_REGISTRY[voiceId];
+                        if (voiceAsset) {
+                            try {
+                                console.log(`[TTSManager] Playing local EVA asset`);
+                                await this.playAudioFile(voiceAsset, options, complete);
+                                playedSuccessfully = true;
+                            } catch (playerError: any) {
+                                console.log(`[TTSManager] Playback failed: ${playerError.message || playerError}`);
+                            }
+                        }
                     }
-                } else if (!voiceAsset) {
-                    console.warn(`[TTSManager] No bundled MP3 found for: "${speechText}"`);
+                } else if (!voiceId) {
+                    console.log(`[TTSManager] Missing EVA voice line for text: "${speechText}"`);
+                    console.log(`[TTSManager] No local EVA audio available, continuing without blocking game.`);
                 }
 
                 if (!playedSuccessfully) {
@@ -247,7 +323,7 @@ export class TTSManager {
             if (status.didJustFinish) {
                 sound.unloadAsync();
                 if (this.currentVoice === sound) this.currentVoice = null;
-                console.log('[TTSManager] playback finished');
+                console.log('[TTSManager] EVA playback finished');
                 if (options.shouldLock) {
                     options.onStatusChange?.(false);
                 }
@@ -255,7 +331,7 @@ export class TTSManager {
             }
         });
 
-        console.log('[TTSManager] playback started');
+        console.log('[TTSManager] EVA playback started');
         await sound.playAsync();
         this.lastSpeakStart = Date.now();
 

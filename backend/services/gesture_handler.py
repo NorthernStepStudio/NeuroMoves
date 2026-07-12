@@ -3,7 +3,7 @@ Module D: Yes/No - Gesture Handler
 Handles swipe gestures for Yes (vertical) and No (horizontal) responses
 """
 
-from config import MAX_ATTEMPTS_BEFORE_HINT
+from core.constants import MAX_ATTEMPTS_BEFORE_HINT
 import math
 
 

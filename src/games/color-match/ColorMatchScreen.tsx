@@ -8,6 +8,7 @@ import {
   GameHeader,
 } from "../../components/GameComponents";
 import { useColorMatchGame } from "./colorMatch.logic";
+import { useGame } from "../../core/GameContext";
 import { spacing, colors, borderRadius } from "../../theme/colors";
 
 const { width } = Dimensions.get("window");
@@ -16,7 +17,9 @@ const { width } = Dimensions.get("window");
 
 export function ColorMatchScreen() {
   const { t } = useTranslation();
-  const { state, handleColorPress, handleRestart } = useColorMatchGame(48); // Mocking child age for now
+  const { settings } = useGame();
+  const childAgeMonths = settings?.childAgeMonths ?? 48;
+  const { state, handleColorPress, handleRestart } = useColorMatchGame(childAgeMonths);
 
   const optionSize = Math.min(
     (width - spacing.lg * 2 - spacing.md * (state.options.length - 1)) /
@@ -39,6 +42,7 @@ export function ColorMatchScreen() {
               style={[
                 styles.targetCircle,
                 { backgroundColor: state.targetColor.value },
+                childAgeMonths < 36 && styles.highlightedTarget,
               ]}
             />
           )}
@@ -51,23 +55,29 @@ export function ColorMatchScreen() {
         />
 
         <View style={styles.optionsContainer}>
-          {state.options.map((color, index) => (
-            <Pressable
-              key={`${color.name}-${index}`}
-              onPress={() => handleColorPress(color)}
-              style={({ pressed }) => [
-                styles.colorOption,
-                {
-                  backgroundColor: color.value,
-                  width: optionSize,
-                  height: optionSize,
-                  transform: [{ scale: pressed ? 0.9 : 1 }],
-                },
-              ]}
-            >
-              <View style={styles.colorInner} />
-            </Pressable>
-          ))}
+          {state.options.map((color, index) => {
+            const isCorrectOption = state.targetColor && color.name === state.targetColor.name;
+            const shouldHighlight = childAgeMonths < 36 && isCorrectOption;
+
+            return (
+              <Pressable
+                key={`${color.name}-${index}`}
+                onPress={() => handleColorPress(color)}
+                style={({ pressed }) => [
+                  styles.colorOption,
+                  {
+                    backgroundColor: color.value,
+                    width: optionSize,
+                    height: optionSize,
+                    transform: [{ scale: pressed ? 0.9 : 1 }],
+                  },
+                  shouldHighlight && styles.highlightedOption,
+                ]}
+              >
+                <View style={styles.colorInner} />
+              </Pressable>
+            );
+          })}
         </View>
       </View>
 
@@ -137,5 +147,23 @@ const styles = StyleSheet.create({
     height: "70%",
     borderRadius: 14,
     backgroundColor: "rgba(255,255,255,0.2)",
+  },
+  highlightedTarget: {
+    borderWidth: 6,
+    borderColor: "#ffffff",
+    shadowColor: "#ffffff",
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 1,
+    shadowRadius: 18,
+    elevation: 20,
+  },
+  highlightedOption: {
+    borderWidth: 6,
+    borderColor: "#ffffff",
+    shadowColor: "#ffffff",
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 1,
+    shadowRadius: 18,
+    elevation: 20,
   },
 });

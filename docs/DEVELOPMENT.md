@@ -2,6 +2,8 @@
 
 This file documents how to start the dev server and troubleshoot device connection issues (Expo/React Native).
 
+Current local default: `npm start` uses LAN mode. Use `npm run start:tunnel` only when LAN is not possible; tunnel mode can fail when ngrok is blocked or slow on the current network.
+
 ## Quick start
 
 - Install deps:
@@ -21,8 +23,8 @@ npm run validate-assets
 ```powershell
 npm start
 # or explicitly
+npm run start:tunnel
 npm run start:lan
-npm run start:localhost
 ```
 
 ## Common connection problems
@@ -73,7 +75,7 @@ npm run start:lan
 
 ```powershell
 # Replace with the URL shown in the overlay
-Invoke-WebRequest -Uri 'http://192.168.1.152:8083/apps/neuromoves/index.bundle' -UseBasicParsing -TimeoutSec 10
+Invoke-WebRequest -Uri 'http://YOUR-LAN-IP:8083/apps/neuromoves/index.bundle' -UseBasicParsing -TimeoutSec 10
 ```
 
 If the request times out or is refused, the device cannot reach the dev server.

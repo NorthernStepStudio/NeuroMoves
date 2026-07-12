@@ -7,7 +7,7 @@ import os
 
 # Database Configuration
 DATABASE_URL = os.environ.get("DATABASE_URL", "") # Supabase/Postgres
-DATABASE_NAME = "reallife_steps.db"
+DATABASE_NAME = os.environ.get("SQLITE_DATABASE_NAME", "reallife_steps_local.db")
 DATABASE_PATH = os.path.join(os.path.dirname(__file__), "..", "database", DATABASE_NAME)
 DB_USER = "db_admin_Loky"
 
@@ -35,16 +35,7 @@ GOOGLE_CLIENT_IDS = [
 if GOOGLE_CLIENT_ID and GOOGLE_CLIENT_ID not in GOOGLE_CLIENT_IDS:
     GOOGLE_CLIENT_IDS.append(GOOGLE_CLIENT_ID)
 
-# AI Voice Configuration - Piper TTS EVA
-# Points to the Piper TTS Voice server which runs the local Piper engine.
-PIPER_TTS_URL = os.environ.get("PIPER_TTS_URL", "http://127.0.0.1:5002").strip("/")
-PIPER_TTS_VOICE_ID = "en-US-AvaNeural"
-PIPER_TTS_VOICE_NAME = "Ava"
-PIPER_TTS_VOICE_STYLE = "Natural, warm"
-AUDIO_CACHE_DIR = os.environ.get(
-    "AUDIO_CACHE_DIR",
-    os.path.join(os.path.dirname(__file__), "audio-cache"),
-)
+# Runtime voice synthesis is retired. The mobile app uses bundled EVA assets.
 
 # AI Chat Configuration
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "")
@@ -52,7 +43,20 @@ GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "")
 # Security Configuration
 ALLOWED_ORIGINS = [
     o.strip()
-    for o in os.environ.get("ALLOWED_ORIGINS", "http://localhost:8085,http://localhost:19006").split(",")
+    for o in os.environ.get(
+        "ALLOWED_ORIGINS",
+        ",".join(
+            [
+                "http://localhost:8084",
+                "http://127.0.0.1:8084",
+                "http://192.168.1.152:8084",
+                "http://localhost:8083",
+                "http://127.0.0.1:8083",
+                "http://192.168.1.152:8083",
+                "http://localhost:19006",
+            ]
+        ),
+    ).split(",")
     if o.strip()
 ]
 RATE_LIMIT_DEFAULT = os.environ.get("RATE_LIMIT_DEFAULT", "60/minute")

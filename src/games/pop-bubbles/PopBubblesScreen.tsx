@@ -24,6 +24,7 @@ import {
   FeedbackOverlay,
 } from "../../components/GameComponents";
 import { usePopBubblesGame } from "./popBubbles.logic";
+import { useGame } from "../../core/GameContext";
 import { BubbleData, BubbleConfig } from "./popBubbles.types";
 import { colors, spacing } from "../../theme/colors";
 
@@ -42,8 +43,10 @@ export default function PopBubblesScreen() {
     setGameLayout({ width, height });
   };
 
+  const { settings } = useGame();
+  const childAgeMonths = settings?.childAgeMonths ?? 48;
   const { state, config, handlePopComplete, handleRestart } = usePopBubblesGame(
-    48,
+    childAgeMonths,
     gameLayout,
   );
 

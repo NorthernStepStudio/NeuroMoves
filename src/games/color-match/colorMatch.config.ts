@@ -14,6 +14,6 @@ export const COLORS: ColorOption[] = [
   { name: "brown", value: "#795548" },
 ];
 
-export const MAX_OPTIONS_TODDLER = 3;
+export const MAX_OPTIONS_TODDLER = 2;
 export const MAX_OPTIONS_DEFAULT = 6;
 export const MAX_OPTIONS_SCHOOL = 8;
